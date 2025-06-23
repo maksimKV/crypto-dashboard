@@ -1,5 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import { Bar } from 'react-chartjs-2';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '@/store';
+import { fetchMarketChart } from '@/store/cryptoSlice';
 import { CryptoChartProps } from '@/types/chartTypes';
 import {
   Chart as ChartJS,
@@ -15,58 +18,18 @@ import {
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
-interface MarketChartData {
-  market_caps: [number, number][];
-}
-
 export function CryptoBarChart({ coinId }: CryptoChartProps) {
-  const [chartData, setChartData] = useState<ChartData<'bar'>>();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const dispatch = useDispatch<AppDispatch>();
+
+  const data = useSelector((state: RootState) => state.crypto.marketChartData[coinId]);
+  const loading = useSelector((state: RootState) => state.crypto.loadingChart);
+  const error = useSelector((state: RootState) => state.crypto.chartError);
 
   useEffect(() => {
-    if (!coinId) return;
-
-    async function fetchMarketCap() {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await fetch(
-          `https://api.coingecko.com/api/v3/coins/${coinId}/market_chart?vs_currency=usd&days=30`
-        );
-
-        if (!res.ok) throw new Error(`HTTP error: ${res.status}`);
-
-        const data: MarketChartData = await res.json();
-
-        const labels = data.market_caps.map(p => {
-          const date = new Date(p[0]);
-          return `${date.getDate()}.${date.getMonth() + 1}`;
-        });
-        const marketCaps = data.market_caps.map(p => p[1] / 1_000_000_000); // милиарди $
-
-        const formattedData: ChartData<'bar'> = {
-          labels,
-          datasets: [
-            {
-              label: `${coinId} Пазарна капитализация ($ млрд)`,
-              data: marketCaps,
-              backgroundColor: 'rgba(255, 99, 132, 0.5)',
-            },
-          ],
-        };
-
-        setChartData(formattedData);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : String(err));
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
+    if (!data) {
+      dispatch(fetchMarketChart({ coinId }));
     }
-
-    fetchMarketCap();
-  }, [coinId]);
+  }, [coinId, dispatch, data]);
 
   const options: ChartOptions<'bar'> = {
     responsive: true,
@@ -76,9 +39,27 @@ export function CryptoBarChart({ coinId }: CryptoChartProps) {
     },
   };
 
-  if (loading) return <p>Зареждане...</p>;
-  if (error) return <p className="text-red-600">Грешка: {error}</p>;
-  if (!chartData) return <p>Няма данни за показване.</p>;
+  if (loading && !data) return <p>Зареждане...</p>;
+  if (error && !data) return <p className="text-red-600">Грешка: {error}</p>;
+  if (!data || !data.market_caps) return <p>Няма данни за показване.</p>;
+
+  const labels = data.market_caps.map((p: [number, number]) => {
+    const date = new Date(p[0]);
+    return `${date.getDate()}.${date.getMonth() + 1}`;
+  });
+
+  const marketCaps = data.market_caps.map((p: [number, number]) => p[1] / 1_000_000_000);
+
+  const chartData: ChartData<'bar'> = {
+    labels,
+    datasets: [
+      {
+        label: `${coinId} Пазарна капитализация ($ млрд)`,
+        data: marketCaps,
+        backgroundColor: 'rgba(255, 99, 132, 0.5)',
+      },
+    ],
+  };
 
   return <Bar data={chartData} options={options} />;
 }
