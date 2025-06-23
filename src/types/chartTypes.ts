@@ -22,6 +22,7 @@ export interface CoinData {
   low_24h: number;
   price_change_24h: number;
   price_change_percentage_24h: number;
+  price_change_percentage_7d?: number;
   circulating_supply: number;
   total_supply: number | null;
 }

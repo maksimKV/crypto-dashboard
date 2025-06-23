@@ -1,23 +1,27 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/store';
-import { fetchCoins } from '@/store/cryptoSlice';
+import { fetchCoins, fetchTopMarketCaps } from '@/store/cryptoSlice';
 import { CryptoLineChart } from '@/components/CryptoLineChart';
 import { CryptoBarChart } from '@/components/CryptoBarChart';
 import { CryptoPieChart } from '@/components/CryptoPieChart';
+import { CryptoRadarChart } from '@/components/CryptoRadarChart';
 
 const tabs = [
   { name: 'Line Chart', key: 'line' },
   { name: 'Bar Chart', key: 'bar' },
   { name: 'Pie Chart', key: 'pie' },
+  { name: 'Radar Chart', key: 'radar' },
 ];
 
 export default function Home() {
   const dispatch = useDispatch<AppDispatch>();
-  const { coins, loadingCoins, errorCoins } = useSelector((state: RootState) => ({
+  const { coins, loadingCoins, errorCoins, topMarketCaps, loadingTopCaps } = useSelector((state: RootState) => ({
     coins: state.crypto.coins,
     loadingCoins: state.crypto.loadingCoins,
     errorCoins: state.crypto.error,
+    topMarketCaps: state.crypto.topMarketCaps,
+    loadingTopCaps: state.crypto.loadingTopCaps,
   }));
 
   const [selectedCoin, setSelectedCoin] = useState<string>('');
@@ -30,6 +34,12 @@ export default function Home() {
       setSelectedCoin(coins[0].id);
     }
   }, [coins, selectedCoin, dispatch]);
+
+  useEffect(() => {
+    if (activeTab === 'radar' && topMarketCaps.length === 0 && !loadingTopCaps) {
+      dispatch(fetchTopMarketCaps());
+    }
+  }, [activeTab, topMarketCaps.length, loadingTopCaps, dispatch]);
 
   return (
     <main className="p-8">
@@ -70,6 +80,9 @@ export default function Home() {
             {activeTab === 'line' && <CryptoLineChart coinId={selectedCoin} />}
             {activeTab === 'bar' && <CryptoBarChart coinId={selectedCoin} />}
             {activeTab === 'pie' && <CryptoPieChart />}
+            {activeTab === 'radar' && (
+              loadingTopCaps ? <p>Зареждане на данни за Radar Chart...</p> : <CryptoRadarChart />
+            )}
           </div>
         </>
       )}
