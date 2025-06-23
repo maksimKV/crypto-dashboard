@@ -20,45 +20,41 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
 
 export function CryptoBarChart({ coinId }: CryptoChartProps) {
   const dispatch = useDispatch<AppDispatch>();
-
   const data = useSelector((state: RootState) => state.crypto.marketChartData[coinId]);
   const loading = useSelector((state: RootState) => state.crypto.loadingChart);
   const error = useSelector((state: RootState) => state.crypto.chartError);
 
   useEffect(() => {
-    if (!data) {
-      dispatch(fetchMarketChart({ coinId }));
-    }
-  }, [coinId, dispatch, data]);
+    if (!coinId || data) return;
+    dispatch(fetchMarketChart({ coinId }));
+  }, [dispatch, coinId, data]);
 
-  const options: ChartOptions<'bar'> = {
-    responsive: true,
-    plugins: {
-      legend: { position: 'top' },
-      title: { display: true, text: 'Пазарна капитализация - бар диаграма' },
-    },
-  };
+  if (loading) return <p>Зареждане...</p>;
+  if (error) return <p className="text-red-600">Грешка: {error}</p>;
+  if (!data) return <p>Няма данни за показване.</p>;
 
-  if (loading && !data) return <p>Зареждане...</p>;
-  if (error && !data) return <p className="text-red-600">Грешка: {error}</p>;
-  if (!data || !data.market_caps) return <p>Няма данни за показване.</p>;
-
-  const labels = data.market_caps.map((p: [number, number]) => {
+  const labels = data.market_caps.map(p => {
     const date = new Date(p[0]);
     return `${date.getDate()}.${date.getMonth() + 1}`;
   });
-
-  const marketCaps = data.market_caps.map((p: [number, number]) => p[1] / 1_000_000_000);
+  const caps = data.market_caps.map(p => p[1] / 1e9);
 
   const chartData: ChartData<'bar'> = {
     labels,
     datasets: [
       {
         label: `${coinId} Пазарна капитализация ($ млрд)`,
-        data: marketCaps,
+        data: caps,
         backgroundColor: 'rgba(255, 99, 132, 0.5)',
       },
     ],
+  };
+  const options: ChartOptions<'bar'> = {
+    responsive: true,
+    plugins: {
+      legend: { position: 'top' },
+      title: { display: true, text: 'Пазарна капитализация - бар диаграма' },
+    },
   };
 
   return <Bar data={chartData} options={options} />;

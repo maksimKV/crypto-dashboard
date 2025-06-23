@@ -21,35 +21,24 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, T
 
 export function CryptoLineChart({ coinId }: CryptoChartProps) {
   const dispatch = useDispatch<AppDispatch>();
-
   const data = useSelector((state: RootState) => state.crypto.marketChartData[coinId]);
   const loading = useSelector((state: RootState) => state.crypto.loadingChart);
   const error = useSelector((state: RootState) => state.crypto.chartError);
 
   useEffect(() => {
-    if (!data) {
-      dispatch(fetchMarketChart({ coinId }));
-    }
-  }, [coinId, dispatch, data]);
+    if (!coinId || data) return;
+    dispatch(fetchMarketChart({ coinId }));
+  }, [dispatch, coinId, data]);
 
-  const options: ChartOptions<'line'> = {
-    responsive: true,
-    plugins: {
-      legend: { position: 'top' },
-      title: { display: true, text: 'Исторически цени' },
-    },
-  };
+  if (loading) return <p>Зареждане...</p>;
+  if (error) return <p className="text-red-600">Грешка: {error}</p>;
+  if (!data) return <p>Няма данни за показване.</p>;
 
-  if (loading && !data) return <p>Зареждане...</p>;
-  if (error && !data) return <p className="text-red-600">Грешка: {error}</p>;
-  if (!data || !data.prices) return <p>Няма данни за показване.</p>;
-
-  const labels = data.prices.map((p: [number, number]) => {
+  const labels = data.prices.map(p => {
     const date = new Date(p[0]);
     return `${date.getDate()}.${date.getMonth() + 1}`;
   });
-
-  const prices = data.prices.map((p: [number, number]) => p[1]);
+  const prices = data.prices.map(p => p[1]);
 
   const chartData: ChartData<'line'> = {
     labels,
@@ -63,6 +52,13 @@ export function CryptoLineChart({ coinId }: CryptoChartProps) {
         tension: 0.3,
       },
     ],
+  };
+  const options: ChartOptions<'line'> = {
+    responsive: true,
+    plugins: {
+      legend: { position: 'top' },
+      title: { display: true, text: 'Исторически цени' },
+    },
   };
 
   return <Line data={chartData} options={options} />;

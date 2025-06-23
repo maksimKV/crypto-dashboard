@@ -16,7 +16,6 @@ ChartJS.register(ArcElement, Tooltip, Legend, Title);
 
 export function CryptoPieChart() {
   const dispatch = useDispatch<AppDispatch>();
-
   const topCoins = useSelector((state: RootState) => state.crypto.topMarketCaps);
   const loading = useSelector((state: RootState) => state.crypto.loadingTopCaps);
   const error = useSelector((state: RootState) => state.crypto.topCapsError);
@@ -29,31 +28,32 @@ export function CryptoPieChart() {
 
   if (loading) return <p>Зареждане...</p>;
   if (error) return <p className="text-red-600">Грешка: {error}</p>;
-  if (!topCoins || topCoins.length === 0) return <p>Няма данни за показване.</p>;
+  if (!topCoins.length) return <p>Няма данни за показване.</p>;
 
-  const labels = topCoins.map(coin => coin.name);
-  const marketCaps = topCoins.map(coin => coin.market_cap);
-  const totalCap = marketCaps.reduce((a, b) => a + b, 0);
-  const percentages = marketCaps.map(cap => (cap / totalCap) * 100);
-
-  const backgroundColors = [
-    'rgba(255, 99, 132, 0.7)',
-    'rgba(54, 162, 235, 0.7)',
-    'rgba(255, 206, 86, 0.7)',
-    'rgba(75, 192, 192, 0.7)',
-    'rgba(153, 102, 255, 0.7)',
-  ];
-
-  const borderColors = backgroundColors.map(c => c.replace('0.7', '1'));
-
+  const labels = topCoins.map(c => c.name);
+  const caps = topCoins.map(c => c.market_cap);
+  const total = caps.reduce((a, b) => a + b, 0);
+  
   const chartData: ChartData<'pie'> = {
     labels,
     datasets: [
       {
         label: 'Пазарен дял (%)',
-        data: percentages,
-        backgroundColor: backgroundColors,
-        borderColor: borderColors,
+        data: caps.map(cap => (cap / total) * 100),
+        backgroundColor: [
+          'rgba(255, 99, 132, 0.7)',
+          'rgba(54, 162, 235, 0.7)',
+          'rgba(255, 206, 86, 0.7)',
+          'rgba(75, 192, 192, 0.7)',
+          'rgba(153, 102, 255, 0.7)',
+        ],
+        borderColor: [
+          'rgba(255, 99, 132, 1)',
+          'rgba(54, 162, 235, 1)',
+          'rgba(255, 206, 86, 1)',
+          'rgba(75, 192, 192, 1)',
+          'rgba(153, 102, 255, 1)',
+        ],
         borderWidth: 1,
       },
     ],

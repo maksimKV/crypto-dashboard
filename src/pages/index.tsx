@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useSelector, useDispatch } from 'react-redux';
-import { RootState, AppDispatch } from '@/store';
-import { fetchCoins, fetchMarketChart } from '@/store/cryptoSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '@/store';
+import { fetchCoins } from '@/store/cryptoSlice';
 import { CryptoLineChart } from '@/components/CryptoLineChart';
 import { CryptoBarChart } from '@/components/CryptoBarChart';
 import { CryptoPieChart } from '@/components/CryptoPieChart';
@@ -12,45 +12,36 @@ const tabs = [
   { name: 'Pie Chart', key: 'pie' },
 ];
 
-export default function Dashboard() {
+export default function Home() {
   const dispatch = useDispatch<AppDispatch>();
-  const coins = useSelector((state: RootState) => state.crypto.coins);
-  const loadingCoins = useSelector((state: RootState) => state.crypto.loadingCoins);
-  const marketChartData = useSelector((state: RootState) => state.crypto.marketChartData);
-  const loadingChart = useSelector((state: RootState) => state.crypto.loadingChart);
-  const chartError = useSelector((state: RootState) => state.crypto.chartError);
+  const { coins, loadingCoins, errorCoins } = useSelector((state: RootState) => ({
+    coins: state.crypto.coins,
+    loadingCoins: state.crypto.loadingCoins,
+    errorCoins: state.crypto.error,
+  }));
 
   const [selectedCoin, setSelectedCoin] = useState<string>('');
-  const [activeTab, setActiveTab] = useState('line');
+  const [activeTab, setActiveTab] = useState<string>('line');
 
   useEffect(() => {
-    dispatch(fetchCoins());
-  }, [dispatch]);
-
-  useEffect(() => {
-    if (coins.length > 0 && !selectedCoin) {
+    if (coins.length === 0) {
+      dispatch(fetchCoins());
+    } else if (!selectedCoin) {
       setSelectedCoin(coins[0].id);
     }
-  }, [coins, selectedCoin]);
-
-  useEffect(() => {
-    if (selectedCoin) {
-      dispatch(fetchMarketChart({ coinId: selectedCoin }));
-    }
-  }, [selectedCoin, activeTab, dispatch]);
-
-  const currentChartData = selectedCoin ? marketChartData[selectedCoin] : null;
+  }, [coins, selectedCoin, dispatch]);
 
   return (
-    <main className="p-8 max-w-4xl mx-auto">
+    <main className="p-8">
       <h1 className="text-3xl font-bold mb-6">Crypto Dashboard</h1>
 
-      {loadingCoins ? (
-        <p>Loading coins...</p>
-      ) : (
+      {loadingCoins && <p>Зареждане на монети...</p>}
+      {errorCoins && <p className="text-red-600">Грешка: {errorCoins}</p>}
+
+      {!loadingCoins && !errorCoins && coins.length > 0 && selectedCoin && (
         <>
           <select
-            className="mb-6 p-2 border rounded w-full max-w-xs"
+            className="mb-6 p-2 border rounded"
             value={selectedCoin}
             onChange={e => setSelectedCoin(e.target.value)}
           >
@@ -75,23 +66,10 @@ export default function Dashboard() {
             ))}
           </nav>
 
-          <div className="bg-white p-4 shadow rounded min-h-[400px]">
-            {loadingChart && <p>Loading chart data...</p>}
-            {chartError && <p className="text-red-600">Error: {chartError}</p>}
-
-            {!loadingChart && !chartError && (
-              <>
-                {activeTab === 'line' && currentChartData && (
-                  <CryptoLineChart coinId={selectedCoin} data={currentChartData} />
-                )}
-                {activeTab === 'bar' && currentChartData && (
-                  <CryptoBarChart coinId={selectedCoin} data={currentChartData} />
-                )}
-                {activeTab === 'pie' && currentChartData && (
-                  <CryptoPieChart />
-                )}
-              </>
-            )}
+          <div className="bg-white p-4 shadow rounded">
+            {activeTab === 'line' && <CryptoLineChart coinId={selectedCoin} />}
+            {activeTab === 'bar' && <CryptoBarChart coinId={selectedCoin} />}
+            {activeTab === 'pie' && <CryptoPieChart />}
           </div>
         </>
       )}

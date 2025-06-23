@@ -3,27 +3,25 @@ import { CoinData, MarketChartData } from '@/types/chartTypes';
 
 interface CryptoState {
   coins: CoinData[];
-  marketChartData: {
-    [coinId: string]: MarketChartData | undefined;
-  };
+  marketChartData: { [coinId: string]: MarketChartData };
+  topMarketCaps: CoinData[];
   loadingCoins: boolean;
   loadingChart: boolean;
+  loadingTopCaps: boolean;
   error: string | null;
   chartError: string | null;
-  topMarketCaps: CoinData[];
-  loadingTopCaps: boolean;
   topCapsError: string | null;
 }
 
 const initialState: CryptoState = {
   coins: [],
   marketChartData: {},
+  topMarketCaps: [],
   loadingCoins: false,
   loadingChart: false,
+  loadingTopCaps: false,
   error: null,
   chartError: null,
-  topMarketCaps: [],
-  loadingTopCaps: false,
   topCapsError: null,
 };
 
@@ -38,6 +36,7 @@ export const fetchCoins = createAsyncThunk('crypto/fetchCoins', async () => {
 export const fetchMarketChart = createAsyncThunk(
   'crypto/fetchMarketChart',
   async ({ coinId }: { coinId: string }) => {
+    if (!coinId) throw new Error('Missing coinId');
     const res = await fetch(
       `https://api.coingecko.com/api/v3/coins/${coinId}/market_chart?vs_currency=usd&days=30`
     );
@@ -89,7 +88,7 @@ const cryptoSlice = createSlice({
         state.loadingChart = false;
         state.chartError = action.error.message ?? 'Unknown error';
       })
-      .addCase(fetchTopMarketCaps.pending, (state) => {
+      .addCase(fetchTopMarketCaps.pending, state => {
         state.loadingTopCaps = true;
         state.topCapsError = null;
       })
