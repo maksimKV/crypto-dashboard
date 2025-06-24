@@ -11,6 +11,7 @@ interface TabsProps {
   onChange: (key: string) => void;
 }
 
+// Tabs component for switching between chart types
 export function Tabs({ tabs, activeKey, onChange }: TabsProps): ReactElement {
   return (
     <nav className="flex gap-4 mb-6">

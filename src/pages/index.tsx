@@ -15,6 +15,7 @@ import {
 import { Tabs } from '@/components/Tabs';
 import { CoinSelector } from '@/components/CoinSelector';
 
+// Lazy load chart components for better performance
 const CryptoLineChart = React.lazy(() => import('@/components/CryptoLineChart').then(mod => ({ default: mod.CryptoLineChart })));
 const CryptoBarChart = React.lazy(() => import('@/components/CryptoBarChart').then(mod => ({ default: mod.CryptoBarChart })));
 const CryptoPieChart = React.lazy(() => import('@/components/CryptoPieChart').then(mod => ({ default: mod.CryptoPieChart })));
@@ -55,8 +56,10 @@ export default function Home(): ReactElement {
     }
   }, [activeTab, topMarketCaps.length, loadingTopCaps, dispatch]);
 
+  // Paginate coins list for selector
   const paginatedCoins = coins.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
+  // Handlers memoized to avoid unnecessary renders
   const handleCoinChange = useCallback((coinId: string) => {
     setSelectedCoin(coinId);
   }, []);
@@ -81,40 +84,44 @@ export default function Home(): ReactElement {
     <main className="p-8">
       <h1 className="text-3xl font-bold mb-6">Crypto Dashboard</h1>
 
-      {loadingCoins && <p>Зареждане на монети...</p>}
-      {errorCoins && <p className="text-red-600">Грешка: {errorCoins}</p>}
+      {loadingCoins && <p>Loading coins...</p>}
+      {errorCoins && <p className="text-red-600">Error: {errorCoins}</p>}
 
       {!loadingCoins && !errorCoins && coins.length > 0 && selectedCoin && (
         <>
+          {/* Coin selector with pagination */}
           <CoinSelector coins={paginatedCoins} selectedCoinId={selectedCoin} onChange={handleCoinChange} itemsPerPage={ITEMS_PER_PAGE} />
 
+          {/* Pagination controls */}
           <div className="mb-4 flex gap-2 items-center">
             <button
               onClick={handlePrevPage}
               disabled={page === 1}
               className="px-3 py-1 border rounded disabled:opacity-50"
             >
-              Предишна страница
+              Previous Page
             </button>
-            <span>Страница {page} от {Math.ceil(coins.length / ITEMS_PER_PAGE)}</span>
+            <span>Page {page} of {Math.ceil(coins.length / ITEMS_PER_PAGE)}</span>
             <button
               onClick={handleNextPage}
               disabled={page * ITEMS_PER_PAGE >= coins.length}
               className="px-3 py-1 border rounded disabled:opacity-50"
             >
-              Следваща страница
+              Next Page
             </button>
           </div>
 
+          {/* Tabs to switch between chart types */}
           <Tabs tabs={tabs} activeKey={activeTab} onChange={handleTabChange} />
 
+          {/* Chart display area with error boundary and suspense fallback */}
           <div className="bg-white p-4 shadow rounded min-h-[300px]">
             <ErrorBoundary>
-              <Suspense fallback={<p>Зареждане на график...</p>}>
+              <Suspense fallback={<p>Loading chart...</p>}>
                 {activeTab === 'line' && <CryptoLineChart coinId={selectedCoin} />}
                 {activeTab === 'bar' && <CryptoBarChart coinId={selectedCoin} />}
                 {activeTab === 'pie' && <CryptoPieChart />}
-                {activeTab === 'radar' && (loadingTopCaps ? <p>Зареждане на данни за Radar Chart...</p> : <CryptoRadarChart />)}
+                {activeTab === 'radar' && (loadingTopCaps ? <p>Loading data for Radar Chart...</p> : <CryptoRadarChart />)}
               </Suspense>
             </ErrorBoundary>
           </div>

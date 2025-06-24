@@ -1,6 +1,10 @@
 import { MarketChartData } from '@/types/chartTypes';
 import { ChartData } from 'chart.js';
 
+/**
+ * Transforms raw market chart data into Chart.js line chart data.
+ * Shows price over time.
+ */
 export function transformLineData(data: MarketChartData, coinId: string): ChartData<'line'> {
   return {
     labels: data.prices.map(p => {
@@ -9,7 +13,7 @@ export function transformLineData(data: MarketChartData, coinId: string): ChartD
     }),
     datasets: [
       {
-        label: `Цена на ${coinId}`,
+        label: `Price of ${coinId}`,
         data: data.prices.map(p => p[1]),
         borderColor: 'rgba(75,192,192,1)',
         backgroundColor: 'rgba(75,192,192,0.2)',
@@ -20,6 +24,10 @@ export function transformLineData(data: MarketChartData, coinId: string): ChartD
   };
 }
 
+/**
+ * Transforms raw market chart data into Chart.js bar chart data.
+ * Shows volume over time.
+ */
 export function transformBarData(data: MarketChartData, coinId: string): ChartData<'bar'> {
   return {
     labels: data.total_volumes.map(p => {
@@ -28,7 +36,7 @@ export function transformBarData(data: MarketChartData, coinId: string): ChartDa
     }),
     datasets: [
       {
-        label: `Обем на ${coinId}`,
+        label: `Volume of ${coinId}`,
         data: data.total_volumes.map(p => p[1]),
         backgroundColor: 'rgba(153,102,255,0.6)',
       },

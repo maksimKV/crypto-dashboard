@@ -1,32 +1,38 @@
-import React, { Component, ReactNode, ErrorInfo } from 'react';
+import React, { ReactNode, ErrorInfo, ReactElement } from 'react';
 
-interface Props {
+interface ErrorBoundaryProps {
   children: ReactNode;
 }
 
-interface State {
+interface ErrorBoundaryState {
   hasError: boolean;
   error?: Error;
 }
 
-export class ErrorBoundary extends Component<Props, State> {
-  constructor(props: Props) {
+/**
+ * ErrorBoundary component to catch errors in React tree and display fallback UI.
+ * Useful for isolating errors from crashing the entire app.
+ */
+export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(error: Error): State {
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    // Update state so next render shows fallback UI
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('ErrorBoundary caught an error', error, errorInfo);
+  componentDidCatch(error: Error, info: ErrorInfo) {
+    // Log error info to an error reporting service here if needed
+    console.error('ErrorBoundary caught an error', error, info);
   }
 
-  render() {
+  render(): ReactElement {
     if (this.state.hasError) {
-      return <p className="text-red-600">Възникна грешка при зареждане на компонент.</p>;
+      return <p className="text-red-600">Something went wrong.</p>;
     }
-    return this.props.children;
+    return this.props.children as ReactElement;
   }
 }

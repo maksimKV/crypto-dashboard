@@ -12,21 +12,26 @@ interface CoinSelectorProps {
   itemsPerPage?: number;
 }
 
+// CoinSelector component with pagination support
 export function CoinSelector({
   coins,
   selectedCoinId,
   onChange,
   itemsPerPage = 20,
 }: CoinSelectorProps): ReactElement {
+  // Current page state
   const [page, setPage] = useState<number>(1);
 
+  // Total number of pages calculated from coins count
   const pageCount = Math.ceil(coins.length / itemsPerPage);
 
+  // Memoize paginated coins slice to avoid unnecessary recalculations
   const paginatedCoins = useMemo(() => {
     const start = (page - 1) * itemsPerPage;
     return coins.slice(start, start + itemsPerPage);
   }, [coins, page, itemsPerPage]);
 
+  // Handlers for pagination buttons
   const handleNextPage = () => {
     if (page < pageCount) setPage(page + 1);
   };
@@ -56,10 +61,10 @@ export function CoinSelector({
           className="px-3 py-1 border rounded disabled:opacity-50"
           type="button"
         >
-          Предишна страница
+          Previous Page
         </button>
         <span>
-          Страница {page} от {pageCount}
+          Page {page} of {pageCount}
         </span>
         <button
           onClick={handleNextPage}
@@ -67,7 +72,7 @@ export function CoinSelector({
           className="px-3 py-1 border rounded disabled:opacity-50"
           type="button"
         >
-          Следваща страница
+          Next Page
         </button>
       </div>
     </div>

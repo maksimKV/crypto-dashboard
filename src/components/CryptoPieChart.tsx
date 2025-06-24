@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, ReactElement } from 'react';
 import { Pie } from 'react-chartjs-2';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch } from '@/store';
@@ -13,27 +13,30 @@ import {
 
 import { selectTopMarketCaps, selectLoadingTopCaps } from '@/store/selectors';
 
+// Register necessary chart.js components for Pie chart
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-function CryptoPieChartComponent() {
+function CryptoPieChartComponent(): ReactElement {
   const dispatch = useDispatch<AppDispatch>();
   const topCoins = useSelector(selectTopMarketCaps);
   const loading = useSelector(selectLoadingTopCaps);
 
+  // Fetch top market caps if not loaded
   useEffect(() => {
     if (topCoins.length === 0) {
       dispatch(fetchTopMarketCaps());
     }
   }, [dispatch, topCoins.length]);
 
-  if (loading) return <p>Зареждане...</p>;
-  if (!topCoins.length) return <p>Няма данни за показване.</p>;
+  if (loading) return <p>Loading...</p>;
+  if (!topCoins.length) return <p>No data to display.</p>;
 
+  // Prepare data for Pie chart
   const data = {
     labels: topCoins.map(c => c.name),
     datasets: [
       {
-        label: 'Пазарен дял',
+        label: 'Market Share',
         data: topCoins.map(c => c.market_cap),
         backgroundColor: [
           '#ff6384',
@@ -52,7 +55,7 @@ function CryptoPieChartComponent() {
     responsive: true,
     plugins: {
       legend: { position: 'right' },
-      title: { display: true, text: 'Пазарен дял на топ 5 криптовалути' },
+      title: { display: true, text: 'Market Share of Top 5 Cryptocurrencies' },
     },
   };
 

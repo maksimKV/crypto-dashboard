@@ -13,17 +13,22 @@ import {
   ChartOptions,
 } from 'chart.js';
 
+// Register necessary chart.js components
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
 
+// Metrics to be shown on radar chart
 const metrics = ['market_cap', 'total_volume', 'price_change_percentage_24h'];
 
 export function CryptoRadarChart(): ReactElement {
+  // Select top market cap coins from redux store
   const coins = useSelector((state: RootState) => state.crypto.topMarketCaps?.data ?? []);
 
-  if (coins.length === 0) return <p>Няма данни за показване.</p>;
+  if (coins.length === 0) return <p>No data available to display.</p>;
 
+  // Format metric labels by replacing underscores and uppercasing
   const labels = metrics.map(m => m.replace(/_/g, ' ').toUpperCase());
 
+  // Create datasets for radar chart with colors and styling
   const datasets = coins.slice(0, 5).map((coin, idx) => ({
     label: coin.name,
     data: [
@@ -46,7 +51,7 @@ export function CryptoRadarChart(): ReactElement {
     responsive: true,
     plugins: {
       legend: { position: 'top' },
-      title: { display: true, text: 'Сравнение на топ криптовалути по метрики' },
+      title: { display: true, text: 'Comparison of Top Cryptocurrencies by Metrics' },
     },
     scales: {
       r: {
