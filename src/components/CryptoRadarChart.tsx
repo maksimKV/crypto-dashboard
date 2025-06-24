@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { ReactElement } from 'react';
 import { Radar } from 'react-chartjs-2';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/store';
@@ -17,7 +17,7 @@ ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, 
 
 const metrics = ['market_cap', 'total_volume', 'price_change_percentage_24h'];
 
-export function CryptoRadarChart() {
+export function CryptoRadarChart(): ReactElement {
   const coins = useSelector((state: RootState) => state.crypto.topMarketCaps?.data ?? []);
 
   if (coins.length === 0) return <p>Няма данни за показване.</p>;

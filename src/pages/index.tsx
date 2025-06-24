@@ -1,11 +1,7 @@
-import { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, Suspense, ReactElement } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch } from '@/store';
 import { fetchCoins, fetchTopMarketCaps } from '@/store/cryptoSlice';
-import { CryptoLineChart } from '@/components/CryptoLineChart';
-import { CryptoBarChart } from '@/components/CryptoBarChart';
-import { CryptoPieChart } from '@/components/CryptoPieChart';
-import { CryptoRadarChart } from '@/components/CryptoRadarChart';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 import {
@@ -16,6 +12,14 @@ import {
   selectLoadingTopCaps,
 } from '@/store/selectors';
 
+import { Tabs } from '@/components/Tabs';
+import { CoinSelector } from '@/components/CoinSelector';
+
+const CryptoLineChart = React.lazy(() => import('@/components/CryptoLineChart').then(mod => ({ default: mod.CryptoLineChart })));
+const CryptoBarChart = React.lazy(() => import('@/components/CryptoBarChart').then(mod => ({ default: mod.CryptoBarChart })));
+const CryptoPieChart = React.lazy(() => import('@/components/CryptoPieChart').then(mod => ({ default: mod.CryptoPieChart })));
+const CryptoRadarChart = React.lazy(() => import('@/components/CryptoRadarChart').then(mod => ({ default: mod.CryptoRadarChart })));
+
 const tabs = [
   { name: 'Line Chart', key: 'line' },
   { name: 'Bar Chart', key: 'bar' },
@@ -25,7 +29,7 @@ const tabs = [
 
 const ITEMS_PER_PAGE = 20;
 
-export default function Home() {
+export default function Home(): ReactElement {
   const dispatch = useDispatch<AppDispatch>();
   const coins = useSelector(selectCoins);
   const loadingCoins = useSelector(selectLoadingCoins);
@@ -40,7 +44,7 @@ export default function Home() {
   useEffect(() => {
     if (coins.length === 0) {
       dispatch(fetchCoins());
-    } else if (!selectedCoin) {
+    } else if (!selectedCoin && coins.length > 0) {
       setSelectedCoin(coins[0].id);
     }
   }, [coins, selectedCoin, dispatch]);
@@ -53,25 +57,25 @@ export default function Home() {
 
   const paginatedCoins = coins.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
-  const handleCoinChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelectedCoin(e.target.value);
+  const handleCoinChange = useCallback((coinId: string) => {
+    setSelectedCoin(coinId);
   }, []);
 
   const handleTabChange = useCallback((key: string) => {
     setActiveTab(key);
   }, []);
 
-  const handleNextPage = () => {
+  const handleNextPage = useCallback(() => {
     if (page * ITEMS_PER_PAGE < coins.length) {
       setPage(page + 1);
     }
-  };
+  }, [page, coins.length]);
 
-  const handlePrevPage = () => {
+  const handlePrevPage = useCallback(() => {
     if (page > 1) {
       setPage(page - 1);
     }
-  };
+  }, [page]);
 
   return (
     <main className="p-8">
@@ -82,17 +86,7 @@ export default function Home() {
 
       {!loadingCoins && !errorCoins && coins.length > 0 && selectedCoin && (
         <>
-          <select
-            className="mb-2 p-2 border rounded"
-            value={selectedCoin}
-            onChange={handleCoinChange}
-          >
-            {paginatedCoins.map(coin => (
-              <option key={coin.id} value={coin.id}>
-                {coin.name}
-              </option>
-            ))}
-          </select>
+          <CoinSelector coins={paginatedCoins} selectedCoinId={selectedCoin} onChange={handleCoinChange} itemsPerPage={ITEMS_PER_PAGE} />
 
           <div className="mb-4 flex gap-2 items-center">
             <button
@@ -112,36 +106,16 @@ export default function Home() {
             </button>
           </div>
 
-          <nav className="flex gap-4 mb-6">
-            {tabs.map(tab => (
-              <button
-                key={tab.key}
-                onClick={() => handleTabChange(tab.key)}
-                className={`px-4 py-2 border rounded ${
-                  activeTab === tab.key ? 'bg-blue-600 text-white' : 'bg-gray-100'
-                }`}
-              >
-                {tab.name}
-              </button>
-            ))}
-          </nav>
+          <Tabs tabs={tabs} activeKey={activeTab} onChange={handleTabChange} />
 
-          <div className="bg-white p-4 shadow rounded">
+          <div className="bg-white p-4 shadow rounded min-h-[300px]">
             <ErrorBoundary>
-              {activeTab === 'line' && <CryptoLineChart coinId={selectedCoin} />}
-            </ErrorBoundary>
-
-            <ErrorBoundary>
-              {activeTab === 'bar' && <CryptoBarChart coinId={selectedCoin} />}
-            </ErrorBoundary>
-
-            <ErrorBoundary>
-              {activeTab === 'pie' && <CryptoPieChart />}
-            </ErrorBoundary>
-
-            <ErrorBoundary>
-              {activeTab === 'radar' &&
-                (loadingTopCaps ? <p>Зареждане на данни за Radar Chart...</p> : <CryptoRadarChart />)}
+              <Suspense fallback={<p>Зареждане на график...</p>}>
+                {activeTab === 'line' && <CryptoLineChart coinId={selectedCoin} />}
+                {activeTab === 'bar' && <CryptoBarChart coinId={selectedCoin} />}
+                {activeTab === 'pie' && <CryptoPieChart />}
+                {activeTab === 'radar' && (loadingTopCaps ? <p>Зареждане на данни за Radar Chart...</p> : <CryptoRadarChart />)}
+              </Suspense>
             </ErrorBoundary>
           </div>
         </>

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, ReactElement } from 'react';
 
 interface Coin {
   id: string;
@@ -17,8 +17,8 @@ export function CoinSelector({
   selectedCoinId,
   onChange,
   itemsPerPage = 20,
-}: CoinSelectorProps) {
-  const [page, setPage] = useState(1);
+}: CoinSelectorProps): ReactElement {
+  const [page, setPage] = useState<number>(1);
 
   const pageCount = Math.ceil(coins.length / itemsPerPage);
 
@@ -54,6 +54,7 @@ export function CoinSelector({
           onClick={handlePrevPage}
           disabled={page === 1}
           className="px-3 py-1 border rounded disabled:opacity-50"
+          type="button"
         >
           Предишна страница
         </button>
@@ -64,6 +65,7 @@ export function CoinSelector({
           onClick={handleNextPage}
           disabled={page === pageCount}
           className="px-3 py-1 border rounded disabled:opacity-50"
+          type="button"
         >
           Следваща страница
         </button>
