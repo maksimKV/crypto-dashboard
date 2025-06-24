@@ -1,3 +1,4 @@
+import React from 'react';
 import { useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
 import { useDispatch, useSelector } from 'react-redux';
@@ -20,7 +21,7 @@ import { transformLineData } from '@/utils/chartHelpers';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
-export function CryptoLineChart({ coinId }: CryptoChartProps) {
+function CryptoLineChartComponent({ coinId }: CryptoChartProps) {
   const dispatch = useDispatch<AppDispatch>();
   const data = useSelector((state: RootState) => state.crypto.marketChartData[coinId]);
   const loading = useSelector((state: RootState) => state.crypto.loadingChart);
@@ -46,3 +47,5 @@ export function CryptoLineChart({ coinId }: CryptoChartProps) {
 
   return <Line data={chartData} options={options} />;
 }
+
+export const CryptoLineChart = React.memo(CryptoLineChartComponent);

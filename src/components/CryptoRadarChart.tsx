@@ -33,7 +33,7 @@ function normalize(values: number[]): number[] {
   return values.map(v => (v - min) / (max - min));
 }
 
-export function CryptoRadarChart() {
+function CryptoRadarChartComponent() {
   const coins = useSelector((state: RootState) => state.crypto.topMarketCaps);
 
   if (coins.length === 0) return <p>Няма данни за показване.</p>;
@@ -94,3 +94,5 @@ export function CryptoRadarChart() {
 
   return <Radar data={data} options={options} />;
 }
+
+export const CryptoRadarChart = React.memo(CryptoRadarChartComponent);

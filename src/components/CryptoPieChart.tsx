@@ -1,3 +1,4 @@
+import React from 'react';
 import { useEffect } from 'react';
 import { Pie } from 'react-chartjs-2';
 import { useDispatch, useSelector } from 'react-redux';
@@ -14,7 +15,7 @@ import {
 
 ChartJS.register(ArcElement, Tooltip, Legend, Title);
 
-export function CryptoPieChart() {
+function CryptoPieChartComponent() {
   const dispatch = useDispatch<AppDispatch>();
   const topCoins = useSelector((state: RootState) => state.crypto.topMarketCaps);
   const loading = useSelector((state: RootState) => state.crypto.loadingTopCaps);
@@ -33,7 +34,7 @@ export function CryptoPieChart() {
   const labels = topCoins.map(c => c.name);
   const caps = topCoins.map(c => c.market_cap);
   const total = caps.reduce((a, b) => a + b, 0);
-  
+
   const chartData: ChartData<'pie'> = {
     labels,
     datasets: [
@@ -69,3 +70,5 @@ export function CryptoPieChart() {
 
   return <Pie data={chartData} options={options} />;
 }
+
+export const CryptoPieChart = React.memo(CryptoPieChartComponent);

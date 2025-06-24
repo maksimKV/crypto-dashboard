@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/store';
 import { fetchCoins, fetchTopMarketCaps } from '@/store/cryptoSlice';
@@ -16,13 +16,15 @@ const tabs = [
 
 export default function Home() {
   const dispatch = useDispatch<AppDispatch>();
-  const { coins, loadingCoins, errorCoins, topMarketCaps, loadingTopCaps } = useSelector((state: RootState) => ({
-    coins: state.crypto.coins,
-    loadingCoins: state.crypto.loadingCoins,
-    errorCoins: state.crypto.error,
-    topMarketCaps: state.crypto.topMarketCaps,
-    loadingTopCaps: state.crypto.loadingTopCaps,
-  }));
+  const { coins, loadingCoins, errorCoins, topMarketCaps, loadingTopCaps } = useSelector(
+    (state: RootState) => ({
+      coins: state.crypto.coins,
+      loadingCoins: state.crypto.loadingCoins,
+      errorCoins: state.crypto.error,
+      topMarketCaps: state.crypto.topMarketCaps,
+      loadingTopCaps: state.crypto.loadingTopCaps,
+    })
+  );
 
   const [selectedCoin, setSelectedCoin] = useState<string>('');
   const [activeTab, setActiveTab] = useState<string>('line');
@@ -41,6 +43,14 @@ export default function Home() {
     }
   }, [activeTab, topMarketCaps.length, loadingTopCaps, dispatch]);
 
+  const handleCoinChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedCoin(e.target.value);
+  }, []);
+
+  const handleTabChange = useCallback((key: string) => {
+    setActiveTab(key);
+  }, []);
+
   return (
     <main className="p-8">
       <h1 className="text-3xl font-bold mb-6">Crypto Dashboard</h1>
@@ -53,7 +63,7 @@ export default function Home() {
           <select
             className="mb-6 p-2 border rounded"
             value={selectedCoin}
-            onChange={e => setSelectedCoin(e.target.value)}
+            onChange={handleCoinChange}
           >
             {coins.map(coin => (
               <option key={coin.id} value={coin.id}>
@@ -66,7 +76,7 @@ export default function Home() {
             {tabs.map(tab => (
               <button
                 key={tab.key}
-                onClick={() => setActiveTab(tab.key)}
+                onClick={() => handleTabChange(tab.key)}
                 className={`px-4 py-2 border rounded ${
                   activeTab === tab.key ? 'bg-blue-600 text-white' : 'bg-gray-100'
                 }`}
@@ -80,9 +90,8 @@ export default function Home() {
             {activeTab === 'line' && <CryptoLineChart coinId={selectedCoin} />}
             {activeTab === 'bar' && <CryptoBarChart coinId={selectedCoin} />}
             {activeTab === 'pie' && <CryptoPieChart />}
-            {activeTab === 'radar' && (
-              loadingTopCaps ? <p>Зареждане на данни за Radar Chart...</p> : <CryptoRadarChart />
-            )}
+            {activeTab === 'radar' &&
+              (loadingTopCaps ? <p>Зареждане на данни за Radar Chart...</p> : <CryptoRadarChart />)}
           </div>
         </>
       )}

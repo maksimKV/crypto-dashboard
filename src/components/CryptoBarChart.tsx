@@ -1,3 +1,4 @@
+import React from 'react';
 import { useEffect } from 'react';
 import { Bar } from 'react-chartjs-2';
 import { useDispatch, useSelector } from 'react-redux';
@@ -19,7 +20,7 @@ import { transformBarData } from '@/utils/chartHelpers';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
-export function CryptoBarChart({ coinId }: CryptoChartProps) {
+function CryptoBarChartComponent({ coinId }: CryptoChartProps) {
   const dispatch = useDispatch<AppDispatch>();
   const data = useSelector((state: RootState) => state.crypto.marketChartData[coinId]);
   const loading = useSelector((state: RootState) => state.crypto.loadingChart);
@@ -45,3 +46,5 @@ export function CryptoBarChart({ coinId }: CryptoChartProps) {
 
   return <Bar data={chartData} options={options} />;
 }
+
+export const CryptoBarChart = React.memo(CryptoBarChartComponent);
