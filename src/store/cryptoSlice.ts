@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { CoinData, MarketChartData } from '@/types/chartTypes';
+import { getCoins, getMarketChart, getTopMarketCaps } from '@/pages/api/cryptoApi';
 
 interface CryptoState {
   coins: CoinData[];
@@ -26,35 +27,20 @@ const initialState: CryptoState = {
 };
 
 export const fetchCoins = createAsyncThunk('crypto/fetchCoins', async () => {
-  const res = await fetch(
-    'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=25&page=1'
-  );
-  if (!res.ok) throw new Error('Failed to fetch coins');
-  return (await res.json()) as CoinData[];
+  return await getCoins();
 });
 
 export const fetchMarketChart = createAsyncThunk(
   'crypto/fetchMarketChart',
   async ({ coinId }: { coinId: string }) => {
-    if (!coinId) throw new Error('Missing coinId');
-    const res = await fetch(
-      `https://api.coingecko.com/api/v3/coins/${coinId}/market_chart?vs_currency=usd&days=30`
-    );
-    if (!res.ok) throw new Error(`Failed to fetch market chart for ${coinId}`);
-    const data = await res.json();
-    return { coinId, data } as { coinId: string; data: MarketChartData };
+    return { coinId, data: await getMarketChart(coinId) };
   }
 );
 
 export const fetchTopMarketCaps = createAsyncThunk(
   'crypto/fetchTopMarketCaps',
   async () => {
-    const res = await fetch(
-      'https://api.coingecko.com/api/v3/coins/markets?' +
-      'vs_currency=usd&order=market_cap_desc&per_page=5&page=1&price_change_percentage=24h,7d'
-    );
-    if (!res.ok) throw new Error('Failed to fetch top market caps');
-    return (await res.json()) as CoinData[];
+    return await getTopMarketCaps();
   }
 );
 
