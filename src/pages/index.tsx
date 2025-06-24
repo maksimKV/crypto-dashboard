@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch } from '@/store';
 import { fetchCoins, fetchTopMarketCaps } from '@/store/cryptoSlice';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
-
 import {
   selectCoins,
   selectLoadingCoins,
@@ -11,15 +10,33 @@ import {
   selectTopMarketCaps,
   selectLoadingTopCaps,
 } from '@/store/selectors';
-
 import { Tabs } from '@/components/Tabs';
 import { CoinSelector } from '@/components/CoinSelector';
 
-// Lazy load chart components for better performance
-const CryptoLineChart = React.lazy(() => import('@/components/CryptoLineChart').then(mod => ({ default: mod.CryptoLineChart })));
-const CryptoBarChart = React.lazy(() => import('@/components/CryptoBarChart').then(mod => ({ default: mod.CryptoBarChart })));
-const CryptoPieChart = React.lazy(() => import('@/components/CryptoPieChart').then(mod => ({ default: mod.CryptoPieChart })));
-const CryptoRadarChart = React.lazy(() => import('@/components/CryptoRadarChart').then(mod => ({ default: mod.CryptoRadarChart })));
+// Lazy load chart components with proper TypeScript typing
+const CryptoLineChart = React.lazy(() => 
+  import('@/components/CryptoLineChart').then(module => ({
+    default: module.CryptoLineChart
+  }))
+);
+
+const CryptoBarChart = React.lazy(() => 
+  import('@/components/CryptoBarChart').then(module => ({
+    default: module.CryptoBarChart
+  }))
+);
+
+const CryptoPieChart = React.lazy(() => 
+  import('@/components/CryptoPieChart').then(module => ({
+    default: module.CryptoPieChart
+  }))
+);
+
+const CryptoRadarChart = React.lazy(() => 
+  import('@/components/CryptoRadarChart').then(module => ({
+    default: module.CryptoRadarChart
+  }))
+);
 
 const tabs = [
   { name: 'Line Chart', key: 'line' },
@@ -27,8 +44,6 @@ const tabs = [
   { name: 'Pie Chart', key: 'pie' },
   { name: 'Radar Chart', key: 'radar' },
 ];
-
-const ITEMS_PER_PAGE = 20;
 
 export default function Home(): ReactElement {
   const dispatch = useDispatch<AppDispatch>();
@@ -41,6 +56,7 @@ export default function Home(): ReactElement {
   const [selectedCoin, setSelectedCoin] = useState<string>('');
   const [activeTab, setActiveTab] = useState<string>('line');
   const [page, setPage] = useState<number>(1);
+  const itemsPerPage = 20;
 
   useEffect(() => {
     if (coins.length === 0) {
@@ -56,10 +72,6 @@ export default function Home(): ReactElement {
     }
   }, [activeTab, topMarketCaps.length, loadingTopCaps, dispatch]);
 
-  // Paginate coins list for selector
-  const paginatedCoins = coins.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
-
-  // Handlers memoized to avoid unnecessary renders
   const handleCoinChange = useCallback((coinId: string) => {
     setSelectedCoin(coinId);
   }, []);
@@ -69,19 +81,21 @@ export default function Home(): ReactElement {
   }, []);
 
   const handleNextPage = useCallback(() => {
-    if (page * ITEMS_PER_PAGE < coins.length) {
-      setPage(page + 1);
+    if (page * itemsPerPage < coins.length) {
+      setPage(p => p + 1);
     }
   }, [page, coins.length]);
 
   const handlePrevPage = useCallback(() => {
     if (page > 1) {
-      setPage(page - 1);
+      setPage(p => p - 1);
     }
   }, [page]);
 
+  const paginatedCoins = coins.slice((page - 1) * itemsPerPage, page * itemsPerPage);
+
   return (
-    <main className="p-8">
+    <main className="p-8 max-w-6xl mx-auto">
       <h1 className="text-3xl font-bold mb-6">Crypto Dashboard</h1>
 
       {loadingCoins && <p>Loading coins...</p>}
@@ -89,39 +103,54 @@ export default function Home(): ReactElement {
 
       {!loadingCoins && !errorCoins && coins.length > 0 && selectedCoin && (
         <>
-          {/* Coin selector with pagination */}
-          <CoinSelector coins={paginatedCoins} selectedCoinId={selectedCoin} onChange={handleCoinChange} itemsPerPage={ITEMS_PER_PAGE} />
-
-          {/* Pagination controls */}
-          <div className="mb-4 flex gap-2 items-center">
-            <button
-              onClick={handlePrevPage}
-              disabled={page === 1}
-              className="px-3 py-1 border rounded disabled:opacity-50"
-            >
-              Previous Page
-            </button>
-            <span>Page {page} of {Math.ceil(coins.length / ITEMS_PER_PAGE)}</span>
-            <button
-              onClick={handleNextPage}
-              disabled={page * ITEMS_PER_PAGE >= coins.length}
-              className="px-3 py-1 border rounded disabled:opacity-50"
-            >
-              Next Page
-            </button>
+          {/* Combined coin selector and pagination */}
+          <div className="mb-6 bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <div className="w-full sm:w-auto">
+                <CoinSelector 
+                  coins={paginatedCoins}
+                  selectedCoinId={selectedCoin}
+                  onChange={handleCoinChange}
+                  hidePagination
+                />
+              </div>
+              
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={handlePrevPage}
+                  disabled={page === 1}
+                  className="px-4 py-2 rounded-md bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Previous
+                </button>
+                <span className="text-sm text-gray-600">
+                  Page {page} of {Math.ceil(coins.length / itemsPerPage)}
+                </span>
+                <button
+                  onClick={handleNextPage}
+                  disabled={page >= Math.ceil(coins.length / itemsPerPage)}
+                  className="px-4 py-2 rounded-md bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
           </div>
 
-          {/* Tabs to switch between chart types */}
+          {/* Chart tabs */}
           <Tabs tabs={tabs} activeKey={activeTab} onChange={handleTabChange} />
 
-          {/* Chart display area with error boundary and suspense fallback */}
-          <div className="bg-white p-4 shadow rounded min-h-[300px]">
+          {/* Chart container */}
+          <div className="bg-white p-6 shadow rounded-lg border border-gray-200 mt-4">
             <ErrorBoundary>
-              <Suspense fallback={<p>Loading chart...</p>}>
+              <Suspense fallback={<div className="h-64 flex items-center justify-center">Loading chart...</div>}>
                 {activeTab === 'line' && <CryptoLineChart coinId={selectedCoin} />}
                 {activeTab === 'bar' && <CryptoBarChart coinId={selectedCoin} />}
                 {activeTab === 'pie' && <CryptoPieChart />}
-                {activeTab === 'radar' && (loadingTopCaps ? <p>Loading data for Radar Chart...</p> : <CryptoRadarChart />)}
+                {activeTab === 'radar' && (loadingTopCaps ? 
+                  <div className="h-64 flex items-center justify-center">Loading radar data...</div> : 
+                  <CryptoRadarChart />
+                )}
               </Suspense>
             </ErrorBoundary>
           </div>
