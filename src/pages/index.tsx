@@ -51,7 +51,6 @@ export default function Home() {
     }
   }, [activeTab, topMarketCaps.length, loadingTopCaps, dispatch]);
 
-  // Пагинирани монети
   const paginatedCoins = coins.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
 
   const handleCoinChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {

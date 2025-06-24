@@ -1,25 +1,24 @@
-import React from 'react';
-import { useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Pie } from 'react-chartjs-2';
 import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '@/store';
+import { AppDispatch } from '@/store';
 import { fetchTopMarketCaps } from '@/store/cryptoSlice';
 import {
   Chart as ChartJS,
   ArcElement,
   Tooltip,
   Legend,
-  Title,
-  ChartData,
+  ChartOptions,
 } from 'chart.js';
 
-ChartJS.register(ArcElement, Tooltip, Legend, Title);
+import { selectTopMarketCaps, selectLoadingTopCaps } from '@/store/selectors';
+
+ChartJS.register(ArcElement, Tooltip, Legend);
 
 function CryptoPieChartComponent() {
   const dispatch = useDispatch<AppDispatch>();
-  const topCoins = useSelector((state: RootState) => state.crypto.topMarketCaps?.data ?? []);
-  const loading = useSelector((state: RootState) => state.crypto.loadingTopCaps);
-  const error = useSelector((state: RootState) => state.crypto.topCapsError);
+  const topCoins = useSelector(selectTopMarketCaps);
+  const loading = useSelector(selectLoadingTopCaps);
 
   useEffect(() => {
     if (topCoins.length === 0) {
@@ -28,47 +27,36 @@ function CryptoPieChartComponent() {
   }, [dispatch, topCoins.length]);
 
   if (loading) return <p>Зареждане...</p>;
-  if (error) return <p className="text-red-600">Грешка: {error}</p>;
   if (!topCoins.length) return <p>Няма данни за показване.</p>;
 
-  const labels = topCoins.map(c => c.name);
-  const caps = topCoins.map(c => c.market_cap);
-  const total = caps.reduce((a, b) => a + b, 0);
-
-  const chartData: ChartData<'pie'> = {
-    labels,
+  const data = {
+    labels: topCoins.map(c => c.name),
     datasets: [
       {
-        label: 'Пазарен дял (%)',
-        data: caps.map(cap => (cap / total) * 100),
+        label: 'Пазарен дял',
+        data: topCoins.map(c => c.market_cap),
         backgroundColor: [
-          'rgba(255, 99, 132, 0.7)',
-          'rgba(54, 162, 235, 0.7)',
-          'rgba(255, 206, 86, 0.7)',
-          'rgba(75, 192, 192, 0.7)',
-          'rgba(153, 102, 255, 0.7)',
+          '#ff6384',
+          '#36a2eb',
+          '#cc65fe',
+          '#ffce56',
+          '#2ecc71',
+          '#e74c3c',
         ],
-        borderColor: [
-          'rgba(255, 99, 132, 1)',
-          'rgba(54, 162, 235, 1)',
-          'rgba(255, 206, 86, 1)',
-          'rgba(75, 192, 192, 1)',
-          'rgba(153, 102, 255, 1)',
-        ],
-        borderWidth: 1,
+        hoverOffset: 4,
       },
     ],
   };
 
-  const options = {
+  const options: ChartOptions<'pie'> = {
     responsive: true,
     plugins: {
-      legend: { position: 'right' as const },
+      legend: { position: 'right' },
       title: { display: true, text: 'Пазарен дял на топ 5 криптовалути' },
     },
   };
 
-  return <Pie data={chartData} options={options} />;
+  return <Pie data={data} options={options} />;
 }
 
 export const CryptoPieChart = React.memo(CryptoPieChartComponent);
