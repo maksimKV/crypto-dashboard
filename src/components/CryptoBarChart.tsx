@@ -12,9 +12,10 @@ import {
   Title,
   Tooltip,
   Legend,
-  ChartData,
   ChartOptions,
 } from 'chart.js';
+
+import { transformBarData } from '@/utils/chartHelpers';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
@@ -33,22 +34,7 @@ export function CryptoBarChart({ coinId }: CryptoChartProps) {
   if (error) return <p className="text-red-600">Грешка: {error}</p>;
   if (!data) return <p>Няма данни за показване.</p>;
 
-  const labels = data.market_caps.map(p => {
-    const date = new Date(p[0]);
-    return `${date.getDate()}.${date.getMonth() + 1}`;
-  });
-  const caps = data.market_caps.map(p => p[1] / 1e9);
-
-  const chartData: ChartData<'bar'> = {
-    labels,
-    datasets: [
-      {
-        label: `${coinId} Пазарна капитализация ($ млрд)`,
-        data: caps,
-        backgroundColor: 'rgba(255, 99, 132, 0.5)',
-      },
-    ],
-  };
+  const chartData = transformBarData(data, coinId);
   const options: ChartOptions<'bar'> = {
     responsive: true,
     plugins: {

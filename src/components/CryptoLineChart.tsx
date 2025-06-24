@@ -13,9 +13,10 @@ import {
   Title,
   Tooltip,
   Legend,
-  ChartData,
   ChartOptions,
 } from 'chart.js';
+
+import { transformLineData } from '@/utils/chartHelpers';
 
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
@@ -34,25 +35,7 @@ export function CryptoLineChart({ coinId }: CryptoChartProps) {
   if (error) return <p className="text-red-600">Грешка: {error}</p>;
   if (!data) return <p>Няма данни за показване.</p>;
 
-  const labels = data.prices.map(p => {
-    const date = new Date(p[0]);
-    return `${date.getDate()}.${date.getMonth() + 1}`;
-  });
-  const prices = data.prices.map(p => p[1]);
-
-  const chartData: ChartData<'line'> = {
-    labels,
-    datasets: [
-      {
-        label: `${coinId} Цена (30 дни)`,
-        data: prices,
-        borderColor: 'rgba(75,192,192,1)',
-        backgroundColor: 'rgba(75,192,192,0.2)',
-        fill: true,
-        tension: 0.3,
-      },
-    ],
-  };
+  const chartData = transformLineData(data, coinId);
   const options: ChartOptions<'line'> = {
     responsive: true,
     plugins: {
