@@ -34,7 +34,7 @@ function normalize(values: number[]): number[] {
 }
 
 function CryptoRadarChartComponent() {
-  const coins = useSelector((state: RootState) => state.crypto.topMarketCaps);
+  const coins = useSelector((state: RootState) => state.crypto.topMarketCaps?.data ?? []);
 
   if (coins.length === 0) return <p>Няма данни за показване.</p>;
 

@@ -17,7 +17,7 @@ ChartJS.register(ArcElement, Tooltip, Legend, Title);
 
 function CryptoPieChartComponent() {
   const dispatch = useDispatch<AppDispatch>();
-  const topCoins = useSelector((state: RootState) => state.crypto.topMarketCaps);
+  const topCoins = useSelector((state: RootState) => state.crypto.topMarketCaps?.data ?? []);
   const loading = useSelector((state: RootState) => state.crypto.loadingTopCaps);
   const error = useSelector((state: RootState) => state.crypto.topCapsError);
 
