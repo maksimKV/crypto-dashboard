@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo } from 'react';
 import { Bar } from 'react-chartjs-2';
 import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '@/store';
+import { AppDispatch } from '@/store';
 import { fetchMarketChart } from '@/store/cryptoSlice';
 import { CryptoChartProps } from '@/types/chartTypes';
 import {
@@ -16,14 +16,15 @@ import {
 } from 'chart.js';
 
 import { transformBarData } from '@/utils/chartHelpers';
+import { selectMarketChartData, selectLoadingChart, selectChartError } from '@/store/selectors';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 function CryptoBarChartComponent({ coinId }: CryptoChartProps) {
   const dispatch = useDispatch<AppDispatch>();
-  const data = useSelector((state: RootState) => state.crypto.marketChartData[coinId]?.data);
-  const loading = useSelector((state: RootState) => state.crypto.loadingChart);
-  const error = useSelector((state: RootState) => state.crypto.chartError);
+  const data = useSelector(selectMarketChartData(coinId));
+  const loading = useSelector(selectLoadingChart);
+  const error = useSelector(selectChartError);
 
   useEffect(() => {
     if (!coinId || data) return;

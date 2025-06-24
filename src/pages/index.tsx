@@ -1,12 +1,20 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '@/store';
+import { AppDispatch } from '@/store';
 import { fetchCoins, fetchTopMarketCaps } from '@/store/cryptoSlice';
 import { CryptoLineChart } from '@/components/CryptoLineChart';
 import { CryptoBarChart } from '@/components/CryptoBarChart';
 import { CryptoPieChart } from '@/components/CryptoPieChart';
 import { CryptoRadarChart } from '@/components/CryptoRadarChart';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+
+import {
+  selectCoins,
+  selectLoadingCoins,
+  selectErrorCoins,
+  selectTopMarketCaps,
+  selectLoadingTopCaps,
+} from '@/store/selectors';
 
 const tabs = [
   { name: 'Line Chart', key: 'line' },
@@ -15,20 +23,19 @@ const tabs = [
   { name: 'Radar Chart', key: 'radar' },
 ];
 
+const ITEMS_PER_PAGE = 20;
+
 export default function Home() {
   const dispatch = useDispatch<AppDispatch>();
-  const { coins, loadingCoins, errorCoins, topMarketCaps, loadingTopCaps } = useSelector(
-    (state: RootState) => ({
-      coins: state.crypto.coins?.data ?? [],
-      loadingCoins: state.crypto.loadingCoins,
-      errorCoins: state.crypto.error,
-      topMarketCaps: state.crypto.topMarketCaps?.data ?? [],
-      loadingTopCaps: state.crypto.loadingTopCaps,
-    })
-  );
+  const coins = useSelector(selectCoins);
+  const loadingCoins = useSelector(selectLoadingCoins);
+  const errorCoins = useSelector(selectErrorCoins);
+  const topMarketCaps = useSelector(selectTopMarketCaps);
+  const loadingTopCaps = useSelector(selectLoadingTopCaps);
 
   const [selectedCoin, setSelectedCoin] = useState<string>('');
   const [activeTab, setActiveTab] = useState<string>('line');
+  const [page, setPage] = useState<number>(1);
 
   useEffect(() => {
     if (coins.length === 0) {
@@ -44,6 +51,9 @@ export default function Home() {
     }
   }, [activeTab, topMarketCaps.length, loadingTopCaps, dispatch]);
 
+  // Пагинирани монети
+  const paginatedCoins = coins.slice((page - 1) * ITEMS_PER_PAGE, page * ITEMS_PER_PAGE);
+
   const handleCoinChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedCoin(e.target.value);
   }, []);
@@ -51,6 +61,18 @@ export default function Home() {
   const handleTabChange = useCallback((key: string) => {
     setActiveTab(key);
   }, []);
+
+  const handleNextPage = () => {
+    if (page * ITEMS_PER_PAGE < coins.length) {
+      setPage(page + 1);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (page > 1) {
+      setPage(page - 1);
+    }
+  };
 
   return (
     <main className="p-8">
@@ -62,16 +84,34 @@ export default function Home() {
       {!loadingCoins && !errorCoins && coins.length > 0 && selectedCoin && (
         <>
           <select
-            className="mb-6 p-2 border rounded"
+            className="mb-2 p-2 border rounded"
             value={selectedCoin}
             onChange={handleCoinChange}
           >
-            {coins.map(coin => (
+            {paginatedCoins.map(coin => (
               <option key={coin.id} value={coin.id}>
                 {coin.name}
               </option>
             ))}
           </select>
+
+          <div className="mb-4 flex gap-2 items-center">
+            <button
+              onClick={handlePrevPage}
+              disabled={page === 1}
+              className="px-3 py-1 border rounded disabled:opacity-50"
+            >
+              Предишна страница
+            </button>
+            <span>Страница {page} от {Math.ceil(coins.length / ITEMS_PER_PAGE)}</span>
+            <button
+              onClick={handleNextPage}
+              disabled={page * ITEMS_PER_PAGE >= coins.length}
+              className="px-3 py-1 border rounded disabled:opacity-50"
+            >
+              Следваща страница
+            </button>
+          </div>
 
           <nav className="flex gap-4 mb-6">
             {tabs.map(tab => (
