@@ -2,10 +2,15 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { CoinData, MarketChartData } from '@/types/chartTypes';
 import { getCoins, getMarketChart, getTopMarketCaps } from '@/pages/api/cryptoApi';
 
+interface CachedData<T> {
+  timestamp: number;
+  data: T;
+}
+
 interface CryptoState {
-  coins: CoinData[];
-  marketChartData: { [coinId: string]: MarketChartData };
-  topMarketCaps: CoinData[];
+  coins: CachedData<CoinData[]> | null;
+  marketChartData: { [coinId: string]: CachedData<MarketChartData> };
+  topMarketCaps: CachedData<CoinData[]> | null;
   loadingCoins: boolean;
   loadingChart: boolean;
   loadingTopCaps: boolean;
@@ -14,10 +19,12 @@ interface CryptoState {
   topCapsError: string | null;
 }
 
+const CACHE_TTL = 15 * 60 * 1000;
+
 const initialState: CryptoState = {
-  coins: [],
+  coins: null,
   marketChartData: {},
-  topMarketCaps: [],
+  topMarketCaps: null,
   loadingCoins: false,
   loadingChart: false,
   loadingTopCaps: false,
@@ -26,9 +33,15 @@ const initialState: CryptoState = {
   topCapsError: null,
 };
 
+function isCacheValid(timestamp: number) {
+  return Date.now() - timestamp < CACHE_TTL;
+}
+
 export const fetchCoins = createAsyncThunk('crypto/fetchCoins', async (_, { getState }) => {
   const state = getState() as { crypto: CryptoState };
-  if (state.crypto.coins.length > 0) return state.crypto.coins;
+  if (state.crypto.coins && isCacheValid(state.crypto.coins.timestamp)) {
+    return state.crypto.coins.data;
+  }
   return await getCoins();
 });
 
@@ -36,10 +49,12 @@ export const fetchMarketChart = createAsyncThunk(
   'crypto/fetchMarketChart',
   async ({ coinId }: { coinId: string }, { getState }) => {
     const state = getState() as { crypto: CryptoState };
-    if (state.crypto.marketChartData[coinId]) {
-      return { coinId, data: state.crypto.marketChartData[coinId] };
+    const cached = state.crypto.marketChartData[coinId];
+    if (cached && isCacheValid(cached.timestamp)) {
+      return { coinId, data: cached.data };
     }
-    return { coinId, data: await getMarketChart(coinId) };
+    const data = await getMarketChart(coinId);
+    return { coinId, data };
   }
 );
 
@@ -47,7 +62,9 @@ export const fetchTopMarketCaps = createAsyncThunk(
   'crypto/fetchTopMarketCaps',
   async (_, { getState }) => {
     const state = getState() as { crypto: CryptoState };
-    if (state.crypto.topMarketCaps.length > 0) return state.crypto.topMarketCaps;
+    if (state.crypto.topMarketCaps && isCacheValid(state.crypto.topMarketCaps.timestamp)) {
+      return state.crypto.topMarketCaps.data;
+    }
     return await getTopMarketCaps();
   }
 );
@@ -63,7 +80,7 @@ const cryptoSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchCoins.fulfilled, (state, action: PayloadAction<CoinData[]>) => {
-        state.coins = action.payload;
+        state.coins = { timestamp: Date.now(), data: action.payload };
         state.loadingCoins = false;
       })
       .addCase(fetchCoins.rejected, (state, action) => {
@@ -76,7 +93,7 @@ const cryptoSlice = createSlice({
       })
       .addCase(fetchMarketChart.fulfilled, (state, action) => {
         const { coinId, data } = action.payload;
-        state.marketChartData[coinId] = data;
+        state.marketChartData[coinId] = { timestamp: Date.now(), data };
         state.loadingChart = false;
       })
       .addCase(fetchMarketChart.rejected, (state, action) => {
@@ -88,7 +105,7 @@ const cryptoSlice = createSlice({
         state.topCapsError = null;
       })
       .addCase(fetchTopMarketCaps.fulfilled, (state, action: PayloadAction<CoinData[]>) => {
-        state.topMarketCaps = action.payload;
+        state.topMarketCaps = { timestamp: Date.now(), data: action.payload };
         state.loadingTopCaps = false;
       })
       .addCase(fetchTopMarketCaps.rejected, (state, action) => {

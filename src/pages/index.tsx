@@ -6,6 +6,7 @@ import { CryptoLineChart } from '@/components/CryptoLineChart';
 import { CryptoBarChart } from '@/components/CryptoBarChart';
 import { CryptoPieChart } from '@/components/CryptoPieChart';
 import { CryptoRadarChart } from '@/components/CryptoRadarChart';
+import { ErrorBoundary } from '@/components/ErrorBoundary';
 
 const tabs = [
   { name: 'Line Chart', key: 'line' },
@@ -18,10 +19,10 @@ export default function Home() {
   const dispatch = useDispatch<AppDispatch>();
   const { coins, loadingCoins, errorCoins, topMarketCaps, loadingTopCaps } = useSelector(
     (state: RootState) => ({
-      coins: state.crypto.coins,
+      coins: state.crypto.coins?.data ?? [],
       loadingCoins: state.crypto.loadingCoins,
       errorCoins: state.crypto.error,
-      topMarketCaps: state.crypto.topMarketCaps,
+      topMarketCaps: state.crypto.topMarketCaps?.data ?? [],
       loadingTopCaps: state.crypto.loadingTopCaps,
     })
   );
@@ -87,11 +88,22 @@ export default function Home() {
           </nav>
 
           <div className="bg-white p-4 shadow rounded">
-            {activeTab === 'line' && <CryptoLineChart coinId={selectedCoin} />}
-            {activeTab === 'bar' && <CryptoBarChart coinId={selectedCoin} />}
-            {activeTab === 'pie' && <CryptoPieChart />}
-            {activeTab === 'radar' &&
-              (loadingTopCaps ? <p>Зареждане на данни за Radar Chart...</p> : <CryptoRadarChart />)}
+            <ErrorBoundary>
+              {activeTab === 'line' && <CryptoLineChart coinId={selectedCoin} />}
+            </ErrorBoundary>
+
+            <ErrorBoundary>
+              {activeTab === 'bar' && <CryptoBarChart coinId={selectedCoin} />}
+            </ErrorBoundary>
+
+            <ErrorBoundary>
+              {activeTab === 'pie' && <CryptoPieChart />}
+            </ErrorBoundary>
+
+            <ErrorBoundary>
+              {activeTab === 'radar' &&
+                (loadingTopCaps ? <p>Зареждане на данни за Radar Chart...</p> : <CryptoRadarChart />)}
+            </ErrorBoundary>
           </div>
         </>
       )}

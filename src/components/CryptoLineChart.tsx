@@ -1,5 +1,4 @@
-import React from 'react';
-import { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Line } from 'react-chartjs-2';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/store';
@@ -23,7 +22,7 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, T
 
 function CryptoLineChartComponent({ coinId }: CryptoChartProps) {
   const dispatch = useDispatch<AppDispatch>();
-  const data = useSelector((state: RootState) => state.crypto.marketChartData[coinId]);
+  const data = useSelector((state: RootState) => state.crypto.marketChartData[coinId]?.data);
   const loading = useSelector((state: RootState) => state.crypto.loadingChart);
   const error = useSelector((state: RootState) => state.crypto.chartError);
 
@@ -32,11 +31,12 @@ function CryptoLineChartComponent({ coinId }: CryptoChartProps) {
     dispatch(fetchMarketChart({ coinId }));
   }, [dispatch, coinId, data]);
 
+  const chartData = useMemo(() => (data ? transformLineData(data, coinId) : null), [data, coinId]);
+
   if (loading) return <p>Зареждане...</p>;
   if (error) return <p className="text-red-600">Грешка: {error}</p>;
-  if (!data) return <p>Няма данни за показване.</p>;
+  if (!chartData) return <p>Няма данни за показване.</p>;
 
-  const chartData = transformLineData(data, coinId);
   const options: ChartOptions<'line'> = {
     responsive: true,
     plugins: {
