@@ -26,20 +26,28 @@ const initialState: CryptoState = {
   topCapsError: null,
 };
 
-export const fetchCoins = createAsyncThunk('crypto/fetchCoins', async () => {
+export const fetchCoins = createAsyncThunk('crypto/fetchCoins', async (_, { getState }) => {
+  const state = getState() as { crypto: CryptoState };
+  if (state.crypto.coins.length > 0) return state.crypto.coins;
   return await getCoins();
 });
 
 export const fetchMarketChart = createAsyncThunk(
   'crypto/fetchMarketChart',
-  async ({ coinId }: { coinId: string }) => {
+  async ({ coinId }: { coinId: string }, { getState }) => {
+    const state = getState() as { crypto: CryptoState };
+    if (state.crypto.marketChartData[coinId]) {
+      return { coinId, data: state.crypto.marketChartData[coinId] };
+    }
     return { coinId, data: await getMarketChart(coinId) };
   }
 );
 
 export const fetchTopMarketCaps = createAsyncThunk(
   'crypto/fetchTopMarketCaps',
-  async () => {
+  async (_, { getState }) => {
+    const state = getState() as { crypto: CryptoState };
+    if (state.crypto.topMarketCaps.length > 0) return state.crypto.topMarketCaps;
     return await getTopMarketCaps();
   }
 );
