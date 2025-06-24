@@ -43,7 +43,7 @@ export function CoinSelector({
   return (
     <div className="mb-4">
       <select
-        className="mb-2 p-2 border rounded w-full"
+        className="mb-2 p-2 border rounded w-full bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
         value={selectedCoinId}
         onChange={e => onChange(e.target.value)}
       >
@@ -54,25 +54,25 @@ export function CoinSelector({
         ))}
       </select>
 
-      <div className="flex gap-2 items-center justify-center">
+      <div className="flex justify-center items-center gap-2">
         <button
           onClick={handlePrevPage}
           disabled={page === 1}
-          className="px-3 py-1 border rounded disabled:opacity-50"
+          className="px-3 py-1 border rounded disabled:opacity-50 bg-gray-100 hover:bg-gray-200"
           type="button"
         >
-          Previous Page
+          Previous
         </button>
-        <span>
+        <span className="text-sm">
           Page {page} of {pageCount}
         </span>
         <button
           onClick={handleNextPage}
           disabled={page === pageCount}
-          className="px-3 py-1 border rounded disabled:opacity-50"
+          className="px-3 py-1 border rounded disabled:opacity-50 bg-gray-100 hover:bg-gray-200"
           type="button"
         >
-          Next Page
+          Next
         </button>
       </div>
     </div>

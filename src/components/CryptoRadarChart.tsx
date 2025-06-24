@@ -55,9 +55,9 @@ function CryptoRadarChartComponent(): ReactElement {
     return { labels, datasets };
   }, [topCoins]);
 
-  if (loading) return <p>Loading radar chart...</p>;
-  if (error) return <p className="text-red-600">Error: {error}</p>;
-  if (!chartData) return <p>No data available.</p>;
+  if (loading) return <p className="text-center py-10">Loading radar chart...</p>;
+  if (error) return <p className="text-red-600 text-center py-10">Error: {error}</p>;
+  if (!chartData) return <p className="text-center py-10">No data available.</p>;
 
   const options: ChartOptions<'radar'> = {
     responsive: true,
@@ -67,7 +67,11 @@ function CryptoRadarChartComponent(): ReactElement {
     },
   };
 
-  return <Radar data={chartData} options={options} />;
+  return (
+    <div className="p-4 bg-white shadow rounded">
+      <Radar data={chartData} options={options} />
+    </div>
+  );
 }
 
 export const CryptoRadarChart = React.memo(CryptoRadarChartComponent);

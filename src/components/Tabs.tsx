@@ -20,7 +20,7 @@ export function Tabs({ tabs, activeKey, onChange }: TabsProps): ReactElement {
           key={tab.key}
           onClick={() => onChange(tab.key)}
           className={`px-4 py-2 border rounded ${
-            activeKey === tab.key ? 'bg-blue-600 text-white' : 'bg-gray-100'
+            activeKey === tab.key ? 'bg-blue-600 text-white' : 'bg-gray-100 hover:bg-gray-200'
           }`}
           type="button"
         >
