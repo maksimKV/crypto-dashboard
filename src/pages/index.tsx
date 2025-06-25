@@ -14,27 +14,27 @@ import { Tabs } from '@/components/Tabs';
 import { CoinSelector } from '@/components/CoinSelector';
 
 // Lazy load chart components with proper TypeScript typing
-const CryptoLineChart = React.lazy(() => 
+const CryptoLineChart = React.lazy(() =>
   import('@/components/CryptoLineChart').then(module => ({
-    default: module.CryptoLineChart
+    default: module.CryptoLineChart,
   }))
 );
 
-const CryptoBarChart = React.lazy(() => 
+const CryptoBarChart = React.lazy(() =>
   import('@/components/CryptoBarChart').then(module => ({
-    default: module.CryptoBarChart
+    default: module.CryptoBarChart,
   }))
 );
 
-const CryptoPieChart = React.lazy(() => 
+const CryptoPieChart = React.lazy(() =>
   import('@/components/CryptoPieChart').then(module => ({
-    default: module.CryptoPieChart
+    default: module.CryptoPieChart,
   }))
 );
 
-const CryptoRadarChart = React.lazy(() => 
+const CryptoRadarChart = React.lazy(() =>
   import('@/components/CryptoRadarChart').then(module => ({
-    default: module.CryptoRadarChart
+    default: module.CryptoRadarChart,
   }))
 );
 
@@ -57,6 +57,9 @@ export default function Home(): ReactElement {
   const [activeTab, setActiveTab] = useState<string>('line');
   const [page, setPage] = useState<number>(1);
   const itemsPerPage = 20;
+
+  // Calculate total number of pages once to avoid repeated calculations
+  const totalPages = Math.ceil(coins.length / itemsPerPage);
 
   useEffect(() => {
     if (coins.length === 0) {
@@ -81,10 +84,10 @@ export default function Home(): ReactElement {
   }, []);
 
   const handleNextPage = useCallback(() => {
-    if (page * itemsPerPage < coins.length) {
+    if (page < totalPages) {
       setPage(p => p + 1);
     }
-  }, [page, coins.length]);
+  }, [page, totalPages]);
 
   const handlePrevPage = useCallback(() => {
     if (page > 1) {
@@ -98,38 +101,48 @@ export default function Home(): ReactElement {
     <main className="p-8 max-w-6xl mx-auto">
       <h1 className="text-3xl font-bold mb-6">Crypto Dashboard</h1>
 
+      {/* Loading and error states for coins */}
       {loadingCoins && <p>Loading coins...</p>}
       {errorCoins && <p className="text-red-600">Error: {errorCoins}</p>}
 
+      {/* Fallback when no coins are available, no loading, no error */}
+      {!loadingCoins && !errorCoins && coins.length === 0 && (
+        <p>No coins available at the moment.</p>
+      )}
+
+      {/* Main content: coin selector, pagination, tabs, and charts */}
       {!loadingCoins && !errorCoins && coins.length > 0 && selectedCoin && (
         <>
           {/* Combined coin selector and pagination */}
           <div className="mb-6 bg-white p-4 rounded-lg shadow-sm border border-gray-200">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
               <div className="w-full sm:w-auto">
-                <CoinSelector 
+                {/* CoinSelector with internal pagination hidden, external pagination used */}
+                <CoinSelector
                   coins={paginatedCoins}
                   selectedCoinId={selectedCoin}
                   onChange={handleCoinChange}
                   hidePagination
                 />
               </div>
-              
+
               <div className="flex items-center gap-2">
                 <button
                   onClick={handlePrevPage}
                   disabled={page === 1}
                   className="px-4 py-2 rounded-md bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  aria-label="Previous page"
                 >
                   Previous
                 </button>
                 <span className="text-sm text-gray-600">
-                  Page {page} of {Math.ceil(coins.length / itemsPerPage)}
+                  Page {page} of {totalPages}
                 </span>
                 <button
                   onClick={handleNextPage}
-                  disabled={page >= Math.ceil(coins.length / itemsPerPage)}
+                  disabled={page >= totalPages}
                   className="px-4 py-2 rounded-md bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  aria-label="Next page"
                 >
                   Next
                 </button>
@@ -147,10 +160,12 @@ export default function Home(): ReactElement {
                 {activeTab === 'line' && <CryptoLineChart coinId={selectedCoin} />}
                 {activeTab === 'bar' && <CryptoBarChart coinId={selectedCoin} />}
                 {activeTab === 'pie' && <CryptoPieChart />}
-                {activeTab === 'radar' && (loadingTopCaps ? 
-                  <div className="h-64 flex items-center justify-center">Loading radar data...</div> : 
-                  <CryptoRadarChart />
-                )}
+                {activeTab === 'radar' &&
+                  (loadingTopCaps ? (
+                    <div className="h-64 flex items-center justify-center">Loading radar data...</div>
+                  ) : (
+                    <CryptoRadarChart />
+                  ))}
               </Suspense>
             </ErrorBoundary>
           </div>
