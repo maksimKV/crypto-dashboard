@@ -1,13 +1,8 @@
-import React, { useEffect, useMemo, ReactElement } from 'react';
+import React, { useEffect, ReactElement } from 'react';
 import { Radar } from 'react-chartjs-2';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch } from '@/store';
 import { fetchTopMarketCaps } from '@/store/cryptoSlice';
-import {
-  selectTopMarketCaps,
-  selectLoadingTopCaps,
-  selectChartError,
-} from '@/store/selectors';
 import {
   Chart as ChartJS,
   RadialLinearScale,
@@ -19,59 +14,100 @@ import {
   ChartOptions,
 } from 'chart.js';
 
-// Register necessary Chart.js components for radar charts
+import { selectTopMarketCaps, selectLoadingTopCaps } from '@/store/selectors';
+
+// Register necessary chart.js components for Radar chart
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
 
-/**
- * CryptoRadarChartComponent displays a radar chart comparing top cryptocurrencies
- * by market cap, 24h price change, and total volume.
- */
 function CryptoRadarChartComponent(): ReactElement {
   const dispatch = useDispatch<AppDispatch>();
   const topCoins = useSelector(selectTopMarketCaps);
   const loading = useSelector(selectLoadingTopCaps);
-  const error = useSelector(selectChartError);
 
-  // Fetch top market cap coins on mount if not already available
+  // Fetch top market caps if not loaded
   useEffect(() => {
     if (topCoins.length === 0) {
       dispatch(fetchTopMarketCaps());
     }
-  }, [dispatch, topCoins]);
+  }, [dispatch, topCoins.length]);
 
-  // Memoize radar chart data for performance
-  const chartData = useMemo(() => {
-    if (!topCoins || topCoins.length === 0) return null;
+  if (loading) return <p>Loading...</p>;
+  if (!topCoins.length) return <p>No data to display.</p>;
 
-    const labels = ['Market Cap', '24h Change (%)', 'Volume'];
-    const datasets = topCoins.map((coin, idx) => ({
+  // Prepare data for Radar chart: comparing market_cap, total_volume, price_change_percentage_24h
+  const data = {
+    labels: ['Market Cap (USD)', 'Volume (USD)', 'Price Change % (24h)'],
+    datasets: topCoins.map((coin, index) => ({
       label: coin.name,
-      data: [coin.market_cap, coin.price_change_percentage_24h, coin.total_volume],
-      backgroundColor: `hsla(${(idx * 72) % 360}, 70%, 60%, 0.3)`,
-      borderColor: `hsla(${(idx * 72) % 360}, 70%, 60%, 1)`,
-      borderWidth: 1,
-    }));
+      data: [
+        coin.market_cap,
+        coin.total_volume,
+        coin.price_change_percentage_24h,
+      ],
+      fill: true,
+      backgroundColor: `rgba(${(index * 50) % 255}, ${(index * 80) % 255}, ${(index * 110) % 255}, 0.2)`,
+      borderColor: `rgba(${(index * 50) % 255}, ${(index * 80) % 255}, ${(index * 110) % 255}, 1)`,
+      pointBackgroundColor: `rgba(${(index * 50) % 255}, ${(index * 80) % 255}, ${(index * 110) % 255}, 1)`,
+      pointBorderColor: '#fff',
+      pointHoverBackgroundColor: '#fff',
+      pointHoverBorderColor: `rgba(${(index * 50) % 255}, ${(index * 80) % 255}, ${(index * 110) % 255}, 1)`,
+    })),
+  };
 
-    return { labels, datasets };
-  }, [topCoins]);
-
-  if (loading) return <p className="text-center py-10">Loading radar chart...</p>;
-  if (error) return <p className="text-red-600 text-center py-10">Error: {error}</p>;
-  if (!chartData) return <p className="text-center py-10">No data available.</p>;
-
+  // Chart options with axis description and custom tooltip for better UX
   const options: ChartOptions<'radar'> = {
     responsive: true,
     plugins: {
       legend: { position: 'top' },
-      title: { display: true, text: 'Top 5 Cryptos Comparison' },
+      title: { display: true, text: 'Comparison of Top Cryptocurrencies' },
+      tooltip: {
+        callbacks: {
+          label: context => {
+            const label = context.dataset.label || '';
+            const value = context.parsed.r;
+            // Format tooltip differently based on axis label
+            const axisLabelRaw = context.chart.data.labels?.[context.dataIndex];
+            const axisLabel = typeof axisLabelRaw === 'string' ? axisLabelRaw : '';
+            if (axisLabel.includes('Price Change')) {
+              return `${label}: ${value.toFixed(2)}%`;
+            }
+            return `${label}: $${value.toLocaleString()}`;
+          },
+        },
+      },
+    },
+    scales: {
+      r: {
+        angleLines: {
+          display: true,
+        },
+        pointLabels: {
+          // Axis labels descriptions for better understanding
+          font: {
+            size: 14,
+            weight: 'bold',
+          },
+          color: '#333',
+        },
+        ticks: {
+          // Show ticks with dollar formatting except for Price Change %
+          callback: val => {
+            if (typeof val === 'number') {
+              // Check if max tick label or close to it for showing %
+              if (val < 10) {
+                return val.toString(); // For small numbers, show as is (for %)
+              }
+              return `$${val.toLocaleString()}`;
+            }
+            return val;
+          },
+          color: '#666',
+        },
+      },
     },
   };
 
-  return (
-    <div className="p-4 bg-white shadow rounded">
-      <Radar data={chartData} options={options} />
-    </div>
-  );
+  return <Radar data={data} options={options} />;
 }
 
 export const CryptoRadarChart = React.memo(CryptoRadarChartComponent);

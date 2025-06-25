@@ -45,11 +45,39 @@ function CryptoLineChartComponent({ coinId }: CryptoChartProps): ReactElement {
   if (error) return <p className="text-red-600">Error: {error}</p>;
   if (!chartData) return <p>No data to display.</p>;
 
+  // Chart options with tooltip customization and axis labels for better UX
   const options: ChartOptions<'line'> = {
     responsive: true,
     plugins: {
       legend: { position: 'top' },
       title: { display: true, text: 'Historical Prices' },
+      tooltip: {
+        callbacks: {
+          // Custom label to format price with 2 decimal places and USD sign
+          label: context => {
+            const value = context.parsed.y;
+            return `Price: $${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+          },
+        },
+      },
+    },
+    scales: {
+      x: {
+        title: {
+          display: true,
+          text: 'Date',
+        },
+      },
+      y: {
+        title: {
+          display: true,
+          text: 'Price (USD)',
+        },
+        ticks: {
+          // Format Y-axis ticks with dollar sign and thousands separator
+          callback: val => `$${Number(val).toLocaleString()}`,
+        },
+      },
     },
   };
 

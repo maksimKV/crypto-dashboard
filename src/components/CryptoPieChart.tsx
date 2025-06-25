@@ -31,6 +31,9 @@ function CryptoPieChartComponent(): ReactElement {
   if (loading) return <p>Loading...</p>;
   if (!topCoins.length) return <p>No data to display.</p>;
 
+  // Calculate total market cap for percentage calculation in tooltip
+  const totalMarketCap = topCoins.reduce((sum, coin) => sum + coin.market_cap, 0);
+
   // Prepare data for Pie chart
   const data = {
     labels: topCoins.map(c => c.name),
@@ -51,11 +54,23 @@ function CryptoPieChartComponent(): ReactElement {
     ],
   };
 
+  // Chart options with tooltip showing both value and percentage with formatting
   const options: ChartOptions<'pie'> = {
     responsive: true,
     plugins: {
       legend: { position: 'right' },
       title: { display: true, text: 'Market Share of Top 5 Cryptocurrencies' },
+      tooltip: {
+        callbacks: {
+          label: context => {
+            const value = context.parsed;
+            const percentage = ((value / totalMarketCap) * 100).toFixed(2);
+            // Format number with thousands separators
+            const formattedValue = value.toLocaleString();
+            return `${context.label}: $${formattedValue} (${percentage}%)`;
+          },
+        },
+      },
     },
   };
 

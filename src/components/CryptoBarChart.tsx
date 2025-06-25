@@ -44,11 +44,39 @@ function CryptoBarChartComponent({ coinId }: CryptoChartProps): ReactElement {
   if (error) return <p className="text-red-600">Error: {error}</p>;
   if (!chartData) return <p>No data to display.</p>;
 
+  // Chart options with tooltip customization and axis labels for better UX
   const options: ChartOptions<'bar'> = {
     responsive: true,
     plugins: {
       legend: { position: 'top' },
       title: { display: true, text: 'Trading Volume History' },
+      tooltip: {
+        callbacks: {
+          // Custom label to format volume with USD sign and thousands separator
+          label: context => {
+            const value = context.parsed.y;
+            return `Volume: $${value.toLocaleString()}`;
+          },
+        },
+      },
+    },
+    scales: {
+      x: {
+        title: {
+          display: true,
+          text: 'Date',
+        },
+      },
+      y: {
+        title: {
+          display: true,
+          text: 'Volume (USD)',
+        },
+        ticks: {
+          // Format Y-axis ticks with dollar sign and thousands separator
+          callback: val => `$${Number(val).toLocaleString()}`,
+        },
+      },
     },
   };
 
