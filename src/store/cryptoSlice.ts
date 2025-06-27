@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { CoinData, MarketChartData } from '@/types/chartTypes';
 import { getCoins, getMarketChart, getTopMarketCaps } from '@/pages/api/cryptoApi';
+import { isCacheValid, getErrorMessage } from '@/utils/cacheUtils';
 
 // Interface for cached data, containing timestamp and the cached data itself
 interface CachedData<T> {
@@ -38,9 +39,6 @@ interface CryptoState {
   topCapsError: string | null;
 }
 
-// Cache time-to-live: 15 minutes in milliseconds
-const CACHE_TTL = 15 * 60 * 1000;
-
 // Initial state of the crypto slice
 const initialState: CryptoState = {
   coins: null,
@@ -53,11 +51,6 @@ const initialState: CryptoState = {
   chartError: null,
   topCapsError: null,
 };
-
-// Utility function to check if cached data is still valid based on timestamp
-function isCacheValid(timestamp: number) {
-  return Date.now() - timestamp < CACHE_TTL;
-}
 
 // Async thunk to fetch the list of coins, using cached data if still valid
 export const fetchCoins = createAsyncThunk('crypto/fetchCoins', async (_, { getState }) => {
@@ -122,7 +115,7 @@ const cryptoSlice = createSlice({
       // When coins fetch failed, clear loading and store error message
       .addCase(fetchCoins.rejected, (state, action) => {
         state.loadingCoins = false;
-        state.error = action.error.message ?? 'Unknown error';
+        state.error = getErrorMessage(action.error.message);
       })
 
       // When fetching market chart starts, set loading and clear errors
@@ -141,7 +134,7 @@ const cryptoSlice = createSlice({
       // When market chart fetch failed, clear loading and store error message
       .addCase(fetchMarketChart.rejected, (state, action) => {
         state.loadingChart = false;
-        state.chartError = action.error.message ?? 'Unknown error';
+        state.chartError = getErrorMessage(action.error.message);
       })
 
       // When fetching top market caps starts, set loading and clear errors
@@ -159,7 +152,7 @@ const cryptoSlice = createSlice({
       // When top market caps fetch failed, clear loading and store error message
       .addCase(fetchTopMarketCaps.rejected, (state, action) => {
         state.loadingTopCaps = false;
-        state.topCapsError = action.error.message ?? 'Unknown error';
+        state.topCapsError = getErrorMessage(action.error.message);
       });
   },
 });
