@@ -16,7 +16,7 @@ import {
 } from 'chart.js';
 
 import { transformBarData } from '@/utils/chartHelpers';
-import { selectMarketChartData, selectLoadingChart, selectChartError } from '@/store/selectors';
+import { selectMarketChartData, selectLoadingChart, selectChartError, selectCurrency } from '@/store/selectors';
 
 // Register necessary Chart.js components for bar charts
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
@@ -27,6 +27,7 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
  */
 function CryptoBarChartComponent({ coinId }: CryptoChartProps): ReactElement {
   const dispatch = useDispatch<AppDispatch>();
+  const currency = useSelector(selectCurrency);
   const data = useSelector(selectMarketChartData(coinId));
   const loading = useSelector(selectLoadingChart);
   const error = useSelector(selectChartError);
@@ -35,10 +36,24 @@ function CryptoBarChartComponent({ coinId }: CryptoChartProps): ReactElement {
   useEffect(() => {
     if (!coinId || data) return;
     dispatch(fetchMarketChart({ coinId }));
-  }, [dispatch, coinId, data]);
+  }, [dispatch, coinId, data, currency]);
 
   // Memoize data transformation for performance
   const chartData = useMemo(() => (data ? transformBarData(data, coinId) : null), [data, coinId]);
+
+  // Helper to get currency symbol or code
+  const getCurrencyLabel = () => {
+    switch (currency) {
+      case 'usd': return '$';
+      case 'eur': return '€';
+      case 'bgn': return 'лв';
+      case 'chf': return 'Fr.';
+      case 'aed': return 'د.إ';
+      case 'sar': return 'ر.س';
+      case 'gbp': return '£';
+      default: return currency.toUpperCase();
+    }
+  };
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p className="text-red-600">Error: {error}</p>;
@@ -52,10 +67,14 @@ function CryptoBarChartComponent({ coinId }: CryptoChartProps): ReactElement {
       title: { display: true, text: 'Trading Volume History' },
       tooltip: {
         callbacks: {
-          // Custom label to format volume with USD sign and thousands separator
+          // Custom label to format volume with currency sign and thousands separator
           label: context => {
             const value = context.parsed.y;
-            return `Volume: $${value.toLocaleString()}`;
+            const label = getCurrencyLabel();
+            if (currency === 'bgn' || currency === 'chf') {
+              return `Volume: ${value.toLocaleString()} ${label}`;
+            }
+            return `Volume: ${label}${value.toLocaleString()}`;
           },
         },
       },
@@ -70,11 +89,17 @@ function CryptoBarChartComponent({ coinId }: CryptoChartProps): ReactElement {
       y: {
         title: {
           display: true,
-          text: 'Volume (USD)',
+          text: `Volume (${getCurrencyLabel()})`,
         },
         ticks: {
-          // Format Y-axis ticks with dollar sign and thousands separator
-          callback: val => `$${Number(val).toLocaleString()}`,
+          // Format Y-axis ticks with currency sign and thousands separator
+          callback: val => {
+            const label = getCurrencyLabel();
+            if (currency === 'bgn' || currency === 'chf') {
+              return `${Number(val).toLocaleString()} ${label}`;
+            }
+            return `${label}${Number(val).toLocaleString()}`;
+          },
         },
       },
     },

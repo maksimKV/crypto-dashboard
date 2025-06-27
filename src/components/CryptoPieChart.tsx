@@ -11,16 +11,31 @@ import {
   ChartOptions,
 } from 'chart.js';
 
-import { selectTopMarketCaps, selectLoadingTopCaps, selectTopCapsError } from '@/store/selectors';
+import { selectTopMarketCaps, selectLoadingTopCaps, selectTopCapsError, selectCurrency } from '@/store/selectors';
 
 // Register necessary chart.js components for Pie chart
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 function CryptoPieChartComponent(): ReactElement {
   const dispatch = useDispatch<AppDispatch>();
-  const topCoins = useSelector(selectTopMarketCaps);
+  const currency = useSelector(selectCurrency);
+  const topCoins = useSelector(selectTopMarketCaps) || [];
   const loading = useSelector(selectLoadingTopCaps);
   const error = useSelector(selectTopCapsError);
+
+  // Helper to get currency symbol or code
+  const getCurrencyLabel = () => {
+    switch (currency) {
+      case 'usd': return '$';
+      case 'eur': return '€';
+      case 'bgn': return 'лв';
+      case 'chf': return 'Fr.';
+      case 'aed': return 'د.إ';
+      case 'sar': return 'ر.س';
+      case 'gbp': return '£';
+      default: return currency.toUpperCase();
+    }
+  };
 
   // Fetch top market caps if not loaded
   useEffect(() => {
@@ -61,7 +76,7 @@ function CryptoPieChartComponent(): ReactElement {
     responsive: true,
     plugins: {
       legend: { position: 'right' },
-      title: { display: true, text: 'Market Share of Top 5 Cryptocurrencies' },
+      title: { display: true, text: `Market Share of Top 5 Cryptocurrencies` },
       tooltip: {
         callbacks: {
           label: context => {
@@ -69,7 +84,11 @@ function CryptoPieChartComponent(): ReactElement {
             const percentage = ((value / totalMarketCap) * 100).toFixed(2);
             // Format number with thousands separators
             const formattedValue = value.toLocaleString();
-            return `${context.label}: $${formattedValue} (${percentage}%)`;
+            const label = getCurrencyLabel();
+            if (currency === 'bgn' || currency === 'chf') {
+              return `${context.label}: ${formattedValue} ${label} (${percentage}%)`;
+            }
+            return `${context.label}: ${label}${formattedValue} (${percentage}%)`;
           },
         },
       },

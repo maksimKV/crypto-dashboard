@@ -58,3 +58,9 @@ export const selectTopCapsError = createSelector(
   selectCryptoState,
   crypto => crypto.topCapsError
 );
+
+// Selector to get the selected currency from the crypto state
+export const selectCurrency = createSelector(
+  selectCryptoState,
+  crypto => crypto.currency
+);

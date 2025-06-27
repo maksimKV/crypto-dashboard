@@ -37,6 +37,8 @@ interface CryptoState {
 
   // Error message for top market caps fetching
   topCapsError: string | null;
+
+  currency: string; // Selected fiat currency
 }
 
 // Initial state of the crypto slice
@@ -50,6 +52,7 @@ const initialState: CryptoState = {
   error: null,
   chartError: null,
   topCapsError: null,
+  currency: 'usd', // Default to USD
 };
 
 // Async thunk to fetch the list of coins, using cached data if still valid
@@ -58,7 +61,7 @@ export const fetchCoins = createAsyncThunk('crypto/fetchCoins', async (_, { getS
   if (state.crypto.coins && isCacheValid(state.crypto.coins.timestamp)) {
     return state.crypto.coins.data;
   }
-  return await getCoins();
+  return await getCoins(state.crypto.currency);
 });
 
 // Async thunk to fetch market chart data for a specific coin, using cached data if valid
@@ -70,7 +73,7 @@ export const fetchMarketChart = createAsyncThunk(
     if (cached && isCacheValid(cached.timestamp)) {
       return { coinId, data: cached.data };
     }
-    const data = await getMarketChart(coinId);
+    const data = await getMarketChart(coinId, state.crypto.currency);
     return { coinId, data };
   }
 );
@@ -83,7 +86,7 @@ export const fetchTopMarketCaps = createAsyncThunk(
     if (state.crypto.topMarketCaps && isCacheValid(state.crypto.topMarketCaps.timestamp)) {
       return state.crypto.topMarketCaps.data;
     }
-    return await getTopMarketCaps();
+    return await getTopMarketCaps(state.crypto.currency);
   }
 );
 
@@ -95,7 +98,11 @@ const cryptoSlice = createSlice({
   initialState,
 
   // No synchronous reducers here
-  reducers: {},
+  reducers: {
+    setCurrency(state, action: PayloadAction<string>) {
+      state.currency = action.payload;
+    },
+  },
 
   // Define async action handlers for the thunks
   extraReducers: builder => {
@@ -159,3 +166,5 @@ const cryptoSlice = createSlice({
 
 // Export the reducer to be added in the store
 export default cryptoSlice.reducer;
+
+export const { setCurrency } = cryptoSlice.actions;

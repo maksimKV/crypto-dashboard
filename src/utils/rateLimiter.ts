@@ -1,4 +1,4 @@
-import LRUCache from 'lru-cache';
+import { LRUCache } from 'lru-cache';
 import { NextApiRequest } from 'next';
 import requestIp from 'request-ip';
 

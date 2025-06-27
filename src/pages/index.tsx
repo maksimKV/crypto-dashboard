@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, Suspense, ReactElement } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch } from '@/store';
-import { fetchCoins, fetchTopMarketCaps } from '@/store/cryptoSlice';
+import { fetchCoins, fetchTopMarketCaps, setCurrency } from '@/store/cryptoSlice';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import {
   selectCoins,
@@ -9,9 +9,10 @@ import {
   selectErrorCoins,
   selectTopMarketCaps,
   selectLoadingTopCaps,
+  selectCurrency,
 } from '@/store/selectors';
 import { Tabs } from '@/components/Tabs';
-import { CoinSelector } from '@/components/CoinSelector';
+import { CoinSelector, CurrencySelector } from '@/components/CoinSelector';
 
 // Lazy load chart components with proper TypeScript typing
 const CryptoLineChart = React.lazy(() =>
@@ -52,6 +53,7 @@ export default function Home(): ReactElement {
   const errorCoins = useSelector(selectErrorCoins);
   const topMarketCaps = useSelector(selectTopMarketCaps);
   const loadingTopCaps = useSelector(selectLoadingTopCaps);
+  const currency = useSelector(selectCurrency);
 
   const [selectedCoin, setSelectedCoin] = useState<string>('');
   const [activeTab, setActiveTab] = useState<string>('line');
@@ -67,13 +69,13 @@ export default function Home(): ReactElement {
     } else if (!selectedCoin && coins.length > 0) {
       setSelectedCoin(coins[0].id);
     }
-  }, [coins, selectedCoin, dispatch]);
+  }, [coins, selectedCoin, dispatch, currency]);
 
   useEffect(() => {
     if (activeTab === 'radar' && topMarketCaps.length === 0 && !loadingTopCaps) {
       dispatch(fetchTopMarketCaps());
     }
-  }, [activeTab, topMarketCaps.length, loadingTopCaps, dispatch]);
+  }, [activeTab, topMarketCaps.length, loadingTopCaps, dispatch, currency]);
 
   const handleCoinChange = useCallback((coinId: string) => {
     setSelectedCoin(coinId);
@@ -95,6 +97,10 @@ export default function Home(): ReactElement {
     }
   }, [page]);
 
+  const handleCurrencyChange = useCallback((currency: string) => {
+    dispatch(setCurrency(currency));
+  }, [dispatch]);
+
   const paginatedCoins = coins.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
   return (
@@ -113,6 +119,11 @@ export default function Home(): ReactElement {
       {/* Main content: coin selector, pagination, tabs, and charts */}
       {!loadingCoins && !errorCoins && coins.length > 0 && selectedCoin && (
         <>
+          {/* Currency selector */}
+          <div className="mb-4 w-full sm:w-64">
+            <CurrencySelector value={currency} onChange={handleCurrencyChange} />
+          </div>
+
           {/* Combined coin selector and pagination */}
           {(activeTab === 'line' || activeTab === 'bar') && (
             <div className="mb-6 bg-white p-4 rounded-lg shadow-sm border border-gray-200">

@@ -17,7 +17,7 @@ import {
 } from 'chart.js';
 
 import { transformLineData } from '@/utils/chartHelpers';
-import { selectMarketChartData, selectLoadingChart, selectChartError } from '@/store/selectors';
+import { selectMarketChartData, selectLoadingChart, selectChartError, selectCurrency } from '@/store/selectors';
 
 // Register necessary Chart.js components for line charts
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
@@ -28,18 +28,33 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, T
  */
 function CryptoLineChartComponent({ coinId }: CryptoChartProps): ReactElement {
   const dispatch = useDispatch<AppDispatch>();
+  const currency = useSelector(selectCurrency);
   const data = useSelector(selectMarketChartData(coinId));
   const loading = useSelector(selectLoadingChart);
   const error = useSelector(selectChartError);
 
-  // Fetch market chart data when component mounts or coinId changes
+  // Fetch market chart data when component mounts or coinId/currency changes
   useEffect(() => {
     if (!coinId || data) return;
     dispatch(fetchMarketChart({ coinId }));
-  }, [dispatch, coinId, data]);
+  }, [dispatch, coinId, data, currency]);
 
   // Memoize chart data transformation for performance
   const chartData = useMemo(() => (data ? transformLineData(data, coinId) : null), [data, coinId]);
+
+  // Helper to get currency symbol or code
+  const getCurrencyLabel = () => {
+    switch (currency) {
+      case 'usd': return '$';
+      case 'eur': return '€';
+      case 'bgn': return 'лв';
+      case 'chf': return 'Fr.';
+      case 'aed': return 'د.إ';
+      case 'sar': return 'ر.س';
+      case 'gbp': return '£';
+      default: return currency.toUpperCase();
+    }
+  };
 
   if (loading) return <p>Loading...</p>;
   if (error) return <p className="text-red-600">Error: {error}</p>;
@@ -50,13 +65,17 @@ function CryptoLineChartComponent({ coinId }: CryptoChartProps): ReactElement {
     responsive: true,
     plugins: {
       legend: { position: 'top' },
-      title: { display: true, text: 'Historical Prices' },
+      title: { display: true, text: `Historical Prices` },
       tooltip: {
         callbacks: {
-          // Custom label to format price with 2 decimal places and USD sign
+          // Custom label to format price with 2 decimal places and currency sign
           label: context => {
             const value = context.parsed.y;
-            return `Price: $${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            const label = getCurrencyLabel();
+            if (currency === 'bgn' || currency === 'chf') {
+              return `Price: ${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${label}`;
+            }
+            return `Price: ${label}${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
           },
         },
       },
@@ -71,11 +90,17 @@ function CryptoLineChartComponent({ coinId }: CryptoChartProps): ReactElement {
       y: {
         title: {
           display: true,
-          text: 'Price (USD)',
+          text: `Price (${getCurrencyLabel()})`,
         },
         ticks: {
-          // Format Y-axis ticks with dollar sign and thousands separator
-          callback: val => `$${Number(val).toLocaleString()}`,
+          // Format Y-axis ticks with currency sign and thousands separator
+          callback: val => {
+            const label = getCurrencyLabel();
+            if (currency === 'bgn' || currency === 'chf') {
+              return `${Number(val).toLocaleString()} ${label}`;
+            }
+            return `${label}${Number(val).toLocaleString()}`;
+          },
         },
       },
     },

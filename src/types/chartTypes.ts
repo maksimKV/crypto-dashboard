@@ -1,6 +1,7 @@
 export interface CryptoChartProps {
   coinId: string;
   data?: MarketChartData;
+  currency?: string;
 }
 
 export interface MarketChartData {

@@ -14,16 +14,31 @@ import {
   ChartOptions,
 } from 'chart.js';
 
-import { selectTopMarketCaps, selectLoadingTopCaps, selectTopCapsError } from '@/store/selectors';
+import { selectTopMarketCaps, selectLoadingTopCaps, selectTopCapsError, selectCurrency } from '@/store/selectors';
 
 // Register necessary chart.js components for Radar chart
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
 
 function CryptoRadarChartComponent(): ReactElement {
   const dispatch = useDispatch<AppDispatch>();
-  const topCoins = useSelector(selectTopMarketCaps);
+  const currency = useSelector(selectCurrency);
+  const topCoins = useSelector(selectTopMarketCaps) || [];
   const loading = useSelector(selectLoadingTopCaps);
   const error = useSelector(selectTopCapsError);
+
+  // Helper to get currency symbol or code
+  const getCurrencyLabel = () => {
+    switch (currency) {
+      case 'usd': return '$';
+      case 'eur': return '€';
+      case 'bgn': return 'лв';
+      case 'chf': return 'Fr.';
+      case 'aed': return 'د.إ';
+      case 'sar': return 'ر.س';
+      case 'gbp': return '£';
+      default: return currency.toUpperCase();
+    }
+  };
 
   // Fetch top market caps if not loaded
   useEffect(() => {
@@ -38,7 +53,11 @@ function CryptoRadarChartComponent(): ReactElement {
 
   // Prepare data for Radar chart: comparing market_cap, total_volume, price_change_percentage_24h
   const data = {
-    labels: ['Market Cap (USD)', 'Volume (USD)', 'Price Change % (24h)'],
+    labels: [
+      `Market Cap (${getCurrencyLabel()})`,
+      `Volume (${getCurrencyLabel()})`,
+      'Price Change % (24h)',
+    ],
     datasets: topCoins.map((coin, index) => ({
       label: coin.name,
       data: [
@@ -73,7 +92,11 @@ function CryptoRadarChartComponent(): ReactElement {
             if (axisLabel.includes('Price Change')) {
               return `${label}: ${value.toFixed(2)}%`;
             }
-            return `${label}: $${value.toLocaleString()}`;
+            const currencyLabel = getCurrencyLabel();
+            if (currency === 'bgn' || currency === 'chf') {
+              return `${label}: ${value.toLocaleString()} ${currencyLabel}`;
+            }
+            return `${label}: ${currencyLabel}${value.toLocaleString()}`;
           },
         },
       },
@@ -92,14 +115,18 @@ function CryptoRadarChartComponent(): ReactElement {
           color: '#333',
         },
         ticks: {
-          // Show ticks with dollar formatting except for Price Change %
+          // Show ticks with currency formatting except for Price Change %
           callback: val => {
             if (typeof val === 'number') {
-              // Check if max tick label or close to it for showing %
+              // For small numbers, show as is (for %)
               if (val < 10) {
-                return val.toString(); // For small numbers, show as is (for %)
+                return val.toString();
               }
-              return `$${val.toLocaleString()}`;
+              const currencyLabel = getCurrencyLabel();
+              if (currency === 'bgn' || currency === 'chf') {
+                return `${val.toLocaleString()} ${currencyLabel}`;
+              }
+              return `${currencyLabel}${val.toLocaleString()}`;
             }
             return val;
           },

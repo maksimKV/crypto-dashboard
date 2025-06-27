@@ -40,3 +40,44 @@ export function CoinSelector({
     </div>
   );
 }
+
+// --- CurrencySelector ---
+
+interface CurrencyOption {
+  code: string;
+  label: string;
+}
+
+const currencyOptions: CurrencyOption[] = [
+  { code: 'usd', label: 'US Dollar (USD)' },
+  { code: 'eur', label: 'Euro (EUR)' },
+  { code: 'bgn', label: 'Bulgarian Lev (BGN)' },
+  { code: 'chf', label: 'Swiss Franc (CHF)' },
+  { code: 'aed', label: 'UAE Dirham (AED)' },
+  { code: 'sar', label: 'Saudi Riyal (SAR)' },
+  { code: 'gbp', label: 'British Pound Sterling (GBP)' },
+];
+
+interface CurrencySelectorProps {
+  value: string;
+  onChange: (currency: string) => void;
+}
+
+export function CurrencySelector({ value, onChange }: CurrencySelectorProps): ReactElement {
+  return (
+    <div className="w-full">
+      <select
+        className="w-full p-2.5 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        aria-label="Select currency"
+      >
+        {currencyOptions.map(option => (
+          <option key={option.code} value={option.code}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
