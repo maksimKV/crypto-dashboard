@@ -3,8 +3,8 @@ import { CoinData, MarketChartData } from '@/types/chartTypes';
 import { LRUCache } from 'lru-cache';
 import { CACHE_TTL, getErrorMessage } from '@/utils/cacheUtils';
 
-// Base URL for CoinGecko API endpoints
-const BASE_URL = 'https://api.coingecko.com/api/v3';
+// Use environment variable for CoinGecko API base URL, fallback to default if not set
+const BASE_URL = process.env.COINGECKO_API_BASE_URL || 'https://api.coingecko.com/api/v3';
 
 // LRU cache for API responses
 const apiCache = new LRUCache<string, object>({ max: 100, ttl: CACHE_TTL });
