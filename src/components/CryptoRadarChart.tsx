@@ -14,7 +14,7 @@ import {
   ChartOptions,
 } from 'chart.js';
 
-import { selectTopMarketCaps, selectLoadingTopCaps } from '@/store/selectors';
+import { selectTopMarketCaps, selectLoadingTopCaps, selectTopCapsError } from '@/store/selectors';
 
 // Register necessary chart.js components for Radar chart
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
@@ -23,6 +23,7 @@ function CryptoRadarChartComponent(): ReactElement {
   const dispatch = useDispatch<AppDispatch>();
   const topCoins = useSelector(selectTopMarketCaps);
   const loading = useSelector(selectLoadingTopCaps);
+  const error = useSelector(selectTopCapsError);
 
   // Fetch top market caps if not loaded
   useEffect(() => {
@@ -32,6 +33,7 @@ function CryptoRadarChartComponent(): ReactElement {
   }, [dispatch, topCoins.length]);
 
   if (loading) return <p>Loading...</p>;
+  if (error) return <p className="text-red-600">Error: {error}</p>;
   if (!topCoins.length) return <p>No data to display.</p>;
 
   // Prepare data for Radar chart: comparing market_cap, total_volume, price_change_percentage_24h
