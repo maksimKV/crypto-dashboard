@@ -114,41 +114,42 @@ export default function Home(): ReactElement {
       {!loadingCoins && !errorCoins && coins.length > 0 && selectedCoin && (
         <>
           {/* Combined coin selector and pagination */}
-          <div className="mb-6 bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-              <div className="w-full sm:w-auto">
-                {/* CoinSelector with internal pagination hidden, external pagination used */}
-                <CoinSelector
-                  coins={paginatedCoins}
-                  selectedCoinId={selectedCoin}
-                  onChange={handleCoinChange}
-                  hidePagination
-                />
-              </div>
+          {(activeTab === 'line' || activeTab === 'bar') && (
+            <div className="mb-6 bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className="w-full sm:w-auto">
+                  {/* CoinSelector with internal pagination hidden, external pagination used */}
+                  <CoinSelector
+                    coins={paginatedCoins}
+                    selectedCoinId={selectedCoin}
+                    onChange={handleCoinChange}
+                  />
+                </div>
 
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={handlePrevPage}
-                  disabled={page === 1}
-                  className="px-4 py-2 rounded-md bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  aria-label="Previous page"
-                >
-                  Previous
-                </button>
-                <span className="text-sm text-gray-600">
-                  Page {page} of {totalPages}
-                </span>
-                <button
-                  onClick={handleNextPage}
-                  disabled={page >= totalPages}
-                  className="px-4 py-2 rounded-md bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  aria-label="Next page"
-                >
-                  Next
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handlePrevPage}
+                    disabled={page === 1}
+                    className="px-4 py-2 rounded-md bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    aria-label="Previous page"
+                  >
+                    Previous
+                  </button>
+                  <span className="text-sm text-gray-600">
+                    Page {page} of {totalPages}
+                  </span>
+                  <button
+                    onClick={handleNextPage}
+                    disabled={page >= totalPages}
+                    className="px-4 py-2 rounded-md bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    aria-label="Next page"
+                  >
+                    Next
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Chart tabs */}
           <Tabs tabs={tabs} activeKey={activeTab} onChange={handleTabChange} />
