@@ -52,3 +52,8 @@ export const selectChartError = createSelector(
   selectCryptoState,
   crypto => crypto.chartError
 );
+
+export const selectTopCapsError = createSelector(
+  selectCryptoState,
+  crypto => crypto.topCapsError
+);

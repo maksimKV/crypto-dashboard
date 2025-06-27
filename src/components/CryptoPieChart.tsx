@@ -11,7 +11,7 @@ import {
   ChartOptions,
 } from 'chart.js';
 
-import { selectTopMarketCaps, selectLoadingTopCaps } from '@/store/selectors';
+import { selectTopMarketCaps, selectLoadingTopCaps, selectTopCapsError } from '@/store/selectors';
 
 // Register necessary chart.js components for Pie chart
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -20,6 +20,7 @@ function CryptoPieChartComponent(): ReactElement {
   const dispatch = useDispatch<AppDispatch>();
   const topCoins = useSelector(selectTopMarketCaps);
   const loading = useSelector(selectLoadingTopCaps);
+  const error = useSelector(selectTopCapsError);
 
   // Fetch top market caps if not loaded
   useEffect(() => {
@@ -29,6 +30,7 @@ function CryptoPieChartComponent(): ReactElement {
   }, [dispatch, topCoins.length]);
 
   if (loading) return <p>Loading...</p>;
+  if (error) return <p className="text-red-600">Error: {error}</p>;
   if (!topCoins.length) return <p>No data to display.</p>;
 
   // Calculate total market cap for percentage calculation in tooltip
