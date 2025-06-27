@@ -33,7 +33,18 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
     const sentryConfigured = typeof Sentry !== 'undefined' && typeof Sentry.captureException === 'function';
     if (sentryConfigured) {
       Sentry.captureException(error);
-    } 
+    } else if (process.env.NODE_ENV === 'production') {
+      // Fallback: send error to a custom API endpoint for logging
+      fetch('/api/logError', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          error: error.message,
+          stack: error.stack,
+          info,
+        }),
+      });
+    }
     // Only log to console in development
     if (process.env.NODE_ENV === 'development') {
       if (!sentryConfigured && !sentryWarned) {
