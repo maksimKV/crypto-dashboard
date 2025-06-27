@@ -38,6 +38,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
     return res.status(200).json(response.data);
   } catch (error) {
-    return res.status(500).json({ error: 'Failed to fetch crypto data', details: error });
+    // Log the detailed error on the server
+    console.error('Error fetching crypto data:', error);
+    // Return only a generic error message to the client
+    return res.status(500).json({ error: 'Failed to fetch crypto data' });
   }
 }
