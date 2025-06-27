@@ -9,6 +9,26 @@ const BASE_URL = 'https://api.coingecko.com/api/v3';
 // LRU cache for API responses
 const apiCache = new LRUCache<string, object>({ max: 100, ttl: CACHE_TTL });
 
+// List of supported currency codes (should match CoinGecko's supported list)
+const SUPPORTED_CURRENCIES = [
+  'usd','eur','gbp','jpy','aud','cad','chf','sek','nzd','mxn','sgd','hkd','btc','eth','bnb','idr','inr','rub','zar','try','brl','pln','thb','krw','myr','twd','dkk','czk','huf','ils','clp','php','aed','sar','vnd','ngn','uah','cop','pen','ars','isk','ron','hrk'
+];
+
+// Simple regex for coinId: lowercase letters, numbers, dashes (CoinGecko style)
+const COIN_ID_REGEX = /^[a-z0-9-]+$/;
+
+function sanitizeCurrency(input: unknown): string | null {
+  if (typeof input !== 'string') return null;
+  const value = input.toLowerCase();
+  return SUPPORTED_CURRENCIES.includes(value) ? value : null;
+}
+
+function sanitizeCoinId(input: unknown): string | null {
+  if (typeof input !== 'string') return null;
+  if (!input || input.length > 50) return null;
+  return COIN_ID_REGEX.test(input) ? input : null;
+}
+
 async function fetchWithCache<T extends object>(url: string): Promise<T> {
   const cached = apiCache.get(url);
   if (cached !== undefined) return cached as T;
@@ -64,17 +84,33 @@ export async function getTopMarketCaps(currency: string = 'usd'): Promise<CoinDa
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   const { coinId, currency = 'usd', topMarketCaps } = req.query;
+
+  // Validate and sanitize currency
+  const safeCurrency = sanitizeCurrency(currency);
+  if (currency && !safeCurrency) {
+    return res.status(400).json({ error: 'Invalid currency code.' });
+  }
+
+  // Validate and sanitize coinId if present
+  let safeCoinId: string | null = null;
+  if (coinId !== undefined) {
+    safeCoinId = sanitizeCoinId(coinId);
+    if (!safeCoinId) {
+      return res.status(400).json({ error: 'Invalid coinId.' });
+    }
+  }
+
   try {
     if (topMarketCaps) {
-      const data = await getTopMarketCaps(currency as string);
+      const data = await getTopMarketCaps(safeCurrency || 'usd');
       return res.status(200).json(data);
     }
-    if (coinId) {
-      const data = await getMarketChart(coinId as string, currency as string);
+    if (safeCoinId) {
+      const data = await getMarketChart(safeCoinId, safeCurrency || 'usd');
       return res.status(200).json(data);
     }
     // Default: get coins
-    const data = await getCoins(currency as string);
+    const data = await getCoins(safeCurrency || 'usd');
     return res.status(200).json(data);
   } catch (error: unknown) {
     // Log the error for server-side analysis
