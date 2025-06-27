@@ -115,7 +115,7 @@ const cryptoSlice = createSlice({
       // When coins fetch failed, clear loading and store error message
       .addCase(fetchCoins.rejected, (state, action) => {
         state.loadingCoins = false;
-        state.error = getErrorMessage(action.error.message);
+        state.error = getErrorMessage(action.error);
       })
 
       // When fetching market chart starts, set loading and clear errors
@@ -134,7 +134,7 @@ const cryptoSlice = createSlice({
       // When market chart fetch failed, clear loading and store error message
       .addCase(fetchMarketChart.rejected, (state, action) => {
         state.loadingChart = false;
-        state.chartError = getErrorMessage(action.error.message);
+        state.chartError = getErrorMessage(action.error);
       })
 
       // When fetching top market caps starts, set loading and clear errors
@@ -152,7 +152,7 @@ const cryptoSlice = createSlice({
       // When top market caps fetch failed, clear loading and store error message
       .addCase(fetchTopMarketCaps.rejected, (state, action) => {
         state.loadingTopCaps = false;
-        state.topCapsError = getErrorMessage(action.error.message);
+        state.topCapsError = getErrorMessage(action.error);
       });
   },
 });
