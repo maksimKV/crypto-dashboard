@@ -8,6 +8,7 @@ import {
     selectMarketChartData,
     selectLoadingChart,
     selectChartError,
+    selectCurrency,
   } from '@/store/selectors';
   
   describe('crypto selectors', () => {
@@ -27,6 +28,7 @@ import {
         },
         loadingChart: true,
         chartError: 'Error fetching chart',
+        currency: 'bgn',
       },
     };
   
@@ -72,5 +74,23 @@ import {
   
     it('should select chart error message', () => {
       expect(selectChartError(mockState as any)).toBe('Error fetching chart');
+    });
+  
+    it('selectCurrency returns the correct currency', () => {
+      const state = {
+        crypto: {
+          coins: { timestamp: 0, data: [] },
+          loadingCoins: false,
+          error: null,
+          topMarketCaps: { timestamp: 0, data: [] },
+          loadingTopCaps: false,
+          marketChartData: {},
+          loadingChart: false,
+          chartError: null,
+          topCapsError: null,
+          currency: 'bgn',
+        },
+      };
+      expect(selectCurrency(state)).toBe('bgn');
     });
   });  

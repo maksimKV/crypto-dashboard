@@ -17,6 +17,7 @@ import reducer, {
       error: null,
       chartError: null,
       topCapsError: null,
+      currency: 'usd',
     };
   
     // Test default case where no action matches
