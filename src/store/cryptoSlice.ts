@@ -1,6 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { CoinData, MarketChartData } from '@/types/chartTypes';
-import { getCoins, getMarketChart, getTopMarketCaps } from '@/pages/api/cryptoApi';
 import { isCacheValid, getErrorMessage } from '@/utils/cacheUtils';
 
 // Interface for cached data, containing timestamp and the cached data itself
@@ -61,7 +60,10 @@ export const fetchCoins = createAsyncThunk('crypto/fetchCoins', async (_, { getS
   if (state.crypto.coins && isCacheValid(state.crypto.coins.timestamp)) {
     return state.crypto.coins.data;
   }
-  return await getCoins(state.crypto.currency);
+  // Fetch from API route
+  const res = await fetch(`/api/cryptoApi?currency=${state.crypto.currency}`);
+  if (!res.ok) throw new Error('Failed to fetch coins');
+  return await res.json();
 });
 
 // Async thunk to fetch market chart data for a specific coin, using cached data if valid
@@ -73,7 +75,10 @@ export const fetchMarketChart = createAsyncThunk(
     if (cached && isCacheValid(cached.timestamp)) {
       return { coinId, data: cached.data };
     }
-    const data = await getMarketChart(coinId, state.crypto.currency);
+    // Fetch from API route
+    const res = await fetch(`/api/cryptoApi?coinId=${coinId}&currency=${state.crypto.currency}`);
+    if (!res.ok) throw new Error('Failed to fetch market chart');
+    const data = await res.json();
     return { coinId, data };
   }
 );
@@ -86,7 +91,10 @@ export const fetchTopMarketCaps = createAsyncThunk(
     if (state.crypto.topMarketCaps && isCacheValid(state.crypto.topMarketCaps.timestamp)) {
       return state.crypto.topMarketCaps.data;
     }
-    return await getTopMarketCaps(state.crypto.currency);
+    // Fetch from API route
+    const res = await fetch(`/api/cryptoApi?topMarketCaps=true&currency=${state.crypto.currency}`);
+    if (!res.ok) throw new Error('Failed to fetch top market caps');
+    return await res.json();
   }
 );
 

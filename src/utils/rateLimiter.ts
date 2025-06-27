@@ -1,44 +1,55 @@
-import { LRUCache } from 'lru-cache';
 import { NextApiRequest } from 'next';
 import requestIp from 'request-ip';
+import Redis from 'ioredis';
+import { LRUCache } from 'lru-cache';
 
-const rateLimitWindowMs = 60 * 1000; // Time window for rate limiting (1 minute)
-const maxRequestsPerWindow = 10;     // Max allowed requests per IP per time window
+const rateLimitWindowMs = 60 * 1000; // 1 minute
+const maxRequestsPerWindow = 10;
 
-// Initialize an LRU cache to track requests per IP
+// Redis connection from env
+const redisUrl = process.env.REDIS_URL;
+let redis: Redis | null = null;
+if (redisUrl) {
+  redis = new Redis(redisUrl);
+}
+
+// In-memory fallback
 const rateLimiterCache = new LRUCache<string, { count: number; timestamp: number }>({
-  max: 500, // Maximum number of IP entries in the cache
+  max: 500,
 });
 
-export function rateLimit(req: NextApiRequest): boolean {
-  // Use request-ip to extract client IP securely
+/**
+ * Distributed rate limiter using Redis. Falls back to in-memory for local/dev.
+ * Returns true if request is allowed, false if rate limited.
+ */
+export async function rateLimit(req: NextApiRequest): Promise<boolean> {
   const ip = requestIp.getClientIp(req) || 'unknown';
-
   const now = Date.now();
-  const entry = rateLimiterCache.get(ip);
 
-  // If no entry for this IP, initialize count and timestamp
-  if (!entry) {
-    rateLimiterCache.set(ip, { count: 1, timestamp: now });
-    return true; // Allow request
+  if (redis) {
+    const key = `ratelimit:${ip}`;
+    const tx = redis.multi();
+    tx.incr(key);
+    tx.pexpire(key, rateLimitWindowMs);
+    const [count] = await tx.exec().then(results => [Number(results?.[0][1])]);
+    return count <= maxRequestsPerWindow;
+  } else {
+    // In-memory fallback
+    const entry = rateLimiterCache.get(ip);
+    if (!entry) {
+      rateLimiterCache.set(ip, { count: 1, timestamp: now });
+      return true;
+    }
+    const elapsed = now - entry.timestamp;
+    if (elapsed > rateLimitWindowMs) {
+      rateLimiterCache.set(ip, { count: 1, timestamp: now });
+      return true;
+    }
+    if (entry.count >= maxRequestsPerWindow) {
+      return false;
+    }
+    entry.count++;
+    rateLimiterCache.set(ip, entry);
+    return true;
   }
-
-  // Calculate elapsed time since first request in current window
-  const elapsed = now - entry.timestamp;
-
-  // If time window has passed, reset count and timestamp
-  if (elapsed > rateLimitWindowMs) {
-    rateLimiterCache.set(ip, { count: 1, timestamp: now });
-    return true; // Allow request
-  }
-
-  // If max requests exceeded in current window, reject request
-  if (entry.count >= maxRequestsPerWindow) {
-    return false; // Deny request
-  }
-
-  // Otherwise, increment request count and update cache
-  entry.count++;
-  rateLimiterCache.set(ip, entry);
-  return true; // Allow request
 }

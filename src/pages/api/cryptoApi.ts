@@ -85,7 +85,7 @@ export async function getTopMarketCaps(currency: string = 'usd'): Promise<CoinDa
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Apply rate limiting
-  if (!rateLimit(req)) {
+  if (!(await rateLimit(req))) {
     return res.status(429).json({ error: 'Too many requests. Please try again later.' });
   }
 
