@@ -1,6 +1,9 @@
 import React, { ReactNode, ErrorInfo, ReactElement } from 'react';
 import * as Sentry from '@sentry/browser';
 
+// Track if Sentry warning has been shown in production
+let sentryWarned = false;
+
 interface ErrorBoundaryProps {
   children: ReactNode;
 }
@@ -27,8 +30,14 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
 
   componentDidCatch(error: Error, info: ErrorInfo) {
     // Log error info to Sentry error reporting service if available
-    if (typeof Sentry !== 'undefined' && typeof Sentry.captureException === 'function') {
+    const sentryConfigured = typeof Sentry !== 'undefined' && typeof Sentry.captureException === 'function';
+    if (sentryConfigured) {
       Sentry.captureException(error);
+    } else if (process.env.NODE_ENV === 'production' && !sentryWarned) {
+      // Warn once in production if Sentry is not configured
+      sentryWarned = true;
+      // eslint-disable-next-line no-console
+      console.warn('Warning: Sentry is not configured in production. Errors will not be reported to a logging service.');
     }
     // Only log to console in development
     if (process.env.NODE_ENV === 'development') {
