@@ -1,4 +1,4 @@
-import React, { ReactNode, ErrorInfo, ReactElement } from 'react';
+import React, { ErrorInfo, ReactNode, ReactElement } from 'react';
 import * as Sentry from '@sentry/browser';
 
 // Track if Sentry warning has been shown in production

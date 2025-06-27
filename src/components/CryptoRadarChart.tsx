@@ -1,4 +1,4 @@
-import React, { useEffect, ReactElement } from 'react';
+import React, { useEffect } from 'react';
 import { Radar } from 'react-chartjs-2';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch } from '@/store';
@@ -20,7 +20,7 @@ import { getCurrencyLabel } from '@/utils/cacheUtils';
 // Register necessary chart.js components for Radar chart
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
 
-function CryptoRadarChartComponent(): ReactElement {
+function CryptoRadarChartComponent(): React.ReactElement {
   const dispatch = useDispatch<AppDispatch>();
   const currency = useSelector(selectCurrency);
   const topCoins = useSelector(selectTopMarketCaps) || [];

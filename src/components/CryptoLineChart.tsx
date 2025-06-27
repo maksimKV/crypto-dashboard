@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, ReactElement } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Line } from 'react-chartjs-2';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch } from '@/store';
@@ -27,7 +27,7 @@ ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, T
  * CryptoLineChartComponent fetches and displays the price history
  * of a cryptocurrency as a line chart.
  */
-function CryptoLineChartComponent({ coinId }: CryptoChartProps): ReactElement {
+function CryptoLineChartComponent({ coinId }: CryptoChartProps): React.ReactElement {
   const dispatch = useDispatch<AppDispatch>();
   const currency = useSelector(selectCurrency);
   const data = useSelector(selectMarketChartData(coinId));

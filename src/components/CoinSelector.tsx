@@ -1,4 +1,4 @@
-import React, { ReactElement } from 'react';
+import React from 'react';
 
 interface Coin {
   id: string;
@@ -22,7 +22,7 @@ export function CoinSelector({
   coins,
   selectedCoinId,
   onChange,
-}: CoinSelectorProps): ReactElement {
+}: CoinSelectorProps): React.ReactElement {
   return (
     <div className="w-full">
       {/* Coin selection dropdown */}
@@ -63,7 +63,7 @@ interface CurrencySelectorProps {
   onChange: (currency: string) => void;
 }
 
-export function CurrencySelector({ value, onChange }: CurrencySelectorProps): ReactElement {
+export function CurrencySelector({ value, onChange }: CurrencySelectorProps): React.ReactElement {
   return (
     <div className="w-full">
       <select

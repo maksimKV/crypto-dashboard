@@ -1,4 +1,4 @@
-import React, { useEffect, ReactElement } from 'react';
+import React, { useEffect } from 'react';
 import { Pie } from 'react-chartjs-2';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch } from '@/store';
@@ -17,7 +17,7 @@ import { getCurrencyLabel } from '@/utils/cacheUtils';
 // Register necessary chart.js components for Pie chart
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-function CryptoPieChartComponent(): ReactElement {
+function CryptoPieChartComponent(): React.ReactElement {
   const dispatch = useDispatch<AppDispatch>();
   const currency = useSelector(selectCurrency);
   const topCoins = useSelector(selectTopMarketCaps) || [];

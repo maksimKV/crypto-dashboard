@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, ReactElement } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Bar } from 'react-chartjs-2';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch } from '@/store';
@@ -26,7 +26,7 @@ ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend)
  * CryptoBarChartComponent fetches and displays the trading volume
  * history of a cryptocurrency as a bar chart.
  */
-function CryptoBarChartComponent({ coinId }: CryptoChartProps): ReactElement {
+function CryptoBarChartComponent({ coinId }: CryptoChartProps): React.ReactElement {
   const dispatch = useDispatch<AppDispatch>();
   const currency = useSelector(selectCurrency);
   const data = useSelector(selectMarketChartData(coinId));

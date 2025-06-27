@@ -1,4 +1,4 @@
-import React, { ReactElement } from 'react';
+import React from 'react';
 
 interface Tab {
   name: string;
@@ -12,7 +12,7 @@ interface TabsProps {
 }
 
 // Tabs component for switching between chart types
-export function Tabs({ tabs, activeKey, onChange }: TabsProps): ReactElement {
+export function Tabs({ tabs, activeKey, onChange }: TabsProps): React.ReactElement {
   return (
     <nav className="flex gap-4 mb-6">
       {tabs.map(tab => (
