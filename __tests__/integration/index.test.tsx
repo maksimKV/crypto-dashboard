@@ -67,6 +67,32 @@ describe('Home Page Integration', () => {
     (cryptoApi.getCoins as jest.Mock).mockResolvedValue(mockCoins);
     (cryptoApi.getMarketChart as jest.Mock).mockResolvedValue(mockMarketChartData);
     (cryptoApi.getTopMarketCaps as jest.Mock).mockResolvedValue(mockTopMarketCaps);
+
+    jest.spyOn(global, 'fetch').mockImplementation((url) => {
+      if (typeof url === 'string' && url.includes('/api/cryptoApi')) {
+        if (url.includes('topMarketCaps=true')) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => mockTopMarketCaps,
+          } as Response);
+        }
+        if (url.includes('coinId=')) {
+          return Promise.resolve({
+            ok: true,
+            json: async () => mockMarketChartData,
+          } as Response);
+        }
+        return Promise.resolve({
+          ok: true,
+          json: async () => mockCoins,
+        } as Response);
+      }
+      return Promise.resolve({ ok: false, json: async () => ({}) } as Response);
+    });
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   function renderHome() {
@@ -106,7 +132,8 @@ describe('Home Page Integration', () => {
     fireEvent.click(screen.getByText('Pie Chart'));
     // Switch to Radar Chart (should trigger top market caps fetch)
     fireEvent.click(screen.getByText('Radar Chart'));
-    await waitFor(() => expect(cryptoApi.getTopMarketCaps).toHaveBeenCalled());
+    // Wait for the radar chart to render (look for canvas)
+    await waitFor(() => expect(screen.getByRole('img')).toBeInTheDocument());
   });
 
   it('renders CurrencySelector and changes currency', () => {

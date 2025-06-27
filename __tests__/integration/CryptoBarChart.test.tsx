@@ -27,8 +27,13 @@ describe('CryptoBarChart Integration', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    // By default, resolve the API call with mock data
-    (cryptoApi.getMarketChart as jest.Mock).mockResolvedValue(mockMarketChartData);
+    // Default: resolve fetch with mock data for success cases
+    jest.spyOn(global, 'fetch').mockImplementation(() =>
+      Promise.resolve({
+        ok: true,
+        json: async () => mockMarketChartData,
+      } as Response)
+    );
   });
 
   // Helper to render the component with Redux Provider
@@ -57,11 +62,13 @@ describe('CryptoBarChart Integration', () => {
   });
 
   it('shows error state if API fails', async () => {
-    // Simulate API failure for this test
-    (cryptoApi.getMarketChart as jest.Mock).mockRejectedValueOnce(new Error('API error'));
+    // Simulate API failure for this test only
+    (global.fetch as jest.Mock).mockImplementationOnce(() =>
+      Promise.resolve({ ok: false, json: async () => ({}), statusText: 'Network request failed' } as Response)
+    );
     renderBarChart('ethereum');
     // Wait for error message to appear
     await waitFor(() => expect(screen.getByText(/error/i)).toBeInTheDocument());
-    expect(screen.getByText(/api error/i)).toBeInTheDocument();
+    expect(screen.getByText(/failed to fetch market chart/i)).toBeInTheDocument();
   });
 });
