@@ -119,8 +119,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const data = await getCoins(safeCurrency || 'usd');
     return res.status(200).json(data);
   } catch (error: unknown) {
-    // Log the error for server-side analysis
-    console.error('API Error:', error);
+    // Log the error for server-side analysis only in development
+    if (process.env.NODE_ENV === 'development') {
+      console.error('API Error:', error);
+    }
     // Use getErrorMessage utility for consistent error extraction
     const message = getErrorMessage(error, 'Internal server error');
     return res.status(500).json({ error: message });
