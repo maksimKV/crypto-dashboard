@@ -2,6 +2,7 @@ import { NextApiRequest, NextApiResponse } from 'next';
 import { CoinData, MarketChartData } from '@/types/chartTypes';
 import { LRUCache } from 'lru-cache';
 import { CACHE_TTL, getErrorMessage } from '@/utils/cacheUtils';
+import { rateLimit } from '@/utils/rateLimiter';
 
 // Use environment variable for CoinGecko API base URL, fallback to default if not set
 const BASE_URL = process.env.COINGECKO_API_BASE_URL || 'https://api.coingecko.com/api/v3';
@@ -83,6 +84,11 @@ export async function getTopMarketCaps(currency: string = 'usd'): Promise<CoinDa
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+  // Apply rate limiting
+  if (!rateLimit(req)) {
+    return res.status(429).json({ error: 'Too many requests. Please try again later.' });
+  }
+
   const { coinId, currency = 'usd', topMarketCaps } = req.query;
 
   // Validate and sanitize currency
