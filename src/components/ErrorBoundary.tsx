@@ -36,6 +36,26 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
 
   render(): ReactElement {
     if (this.state.hasError) {
+      if (process.env.NODE_ENV === 'development') {
+        return (
+          <div className="text-red-600">
+            <p>Something went wrong.</p>
+            {this.state.error && (
+              <>
+                <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+                  {this.state.error.message}
+                </pre>
+                {this.state.error.stack && (
+                  <details style={{ marginTop: '1em' }}>
+                    <summary>Stack Trace</summary>
+                    <pre style={{ whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>{this.state.error.stack}</pre>
+                  </details>
+                )}
+              </>
+            )}
+          </div>
+        );
+      }
       return <p className="text-red-600">Something went wrong.</p>;
     }
     return this.props.children as ReactElement;
