@@ -53,6 +53,7 @@ export const selectChartError = createSelector(
   crypto => crypto.chartError
 );
 
+// Selector to get the error message related to fetching top market caps
 export const selectTopCapsError = createSelector(
   selectCryptoState,
   crypto => crypto.topCapsError
