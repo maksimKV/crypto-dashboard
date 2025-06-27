@@ -1,3 +1,5 @@
+import { CURRENCY_LABELS } from '@/utils/currencies';
+
 // Cache time-to-live: 15 minutes in milliseconds
 export const CACHE_TTL = 15 * 60 * 1000;
 
@@ -31,14 +33,5 @@ export function getErrorMessage(error: unknown, fallback = 'Unknown error'): str
  * @returns The currency symbol or code.
  */
 export function getCurrencyLabel(currency: string): string {
-  switch (currency) {
-    case 'usd': return '$';
-    case 'eur': return '€';
-    case 'bgn': return 'лв';
-    case 'chf': return 'Fr.';
-    case 'aed': return 'د.إ';
-    case 'sar': return 'ر.س';
-    case 'gbp': return '£';
-    default: return currency ? currency.toUpperCase() : '';
-  }
+  return CURRENCY_LABELS[currency] || (currency ? currency.toUpperCase() : '');
 } 

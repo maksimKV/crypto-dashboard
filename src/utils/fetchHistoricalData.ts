@@ -1,3 +1,5 @@
+import { fetchApiData } from './fetchData';
+
 /**
  * Fetches historical market chart data for a specific cryptocurrency from CoinGecko API.
  * 
@@ -10,10 +12,5 @@
  */
 export async function fetchHistoricalData(coinId: string, currency: string = 'usd') {
   const url = `/api/cryptoApi?coinId=${coinId}&currency=${currency}`;
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error('Failed to fetch historical data');
-  }
-  const data = await response.json();
-  return data;
+  return fetchApiData(url, 'Failed to fetch historical data');
 }

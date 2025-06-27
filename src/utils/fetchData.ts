@@ -1,6 +1,24 @@
 import { CoinData } from '@/types/chartTypes';
 
 /**
+ * Generic fetch utility for API calls with error handling.
+ */
+export async function fetchApiData<T>(url: string, errorMsg: string): Promise<T> {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(errorMsg);
+  }
+  return await response.json();
+}
+
+/**
+ * fetchApiData is a generic utility for making API requests with error handling.
+ * @param url - The API endpoint to fetch
+ * @param errorMsg - The error message to throw if the request fails
+ * @returns The parsed JSON response
+ */
+
+/**
  * Fetches cryptocurrency market data from the CoinGecko API.
  * 
  * @returns {Promise<CoinData[]>} - A promise that resolves to an array of CoinData objects.
@@ -10,10 +28,5 @@ import { CoinData } from '@/types/chartTypes';
  */
 export async function fetchCryptoData(currency: string = 'usd'): Promise<CoinData[]> {
   const url = `/api/cryptoApi?currency=${currency}`;
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error('Failed to fetch crypto data');
-  }
-  const data: CoinData[] = await response.json();
-  return data;
+  return fetchApiData<CoinData[]>(url, 'Failed to fetch crypto data');
 }

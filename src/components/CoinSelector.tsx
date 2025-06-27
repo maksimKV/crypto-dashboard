@@ -1,4 +1,5 @@
 import React from 'react';
+import { CURRENCY_OPTIONS } from '@/utils/currencies';
 
 interface Coin {
   id: string;
@@ -43,26 +44,15 @@ export function CoinSelector({
 
 // --- CurrencySelector ---
 
-interface CurrencyOption {
-  code: string;
-  label: string;
-}
-
-const currencyOptions: CurrencyOption[] = [
-  { code: 'usd', label: 'US Dollar (USD)' },
-  { code: 'eur', label: 'Euro (EUR)' },
-  { code: 'bgn', label: 'Bulgarian Lev (BGN)' },
-  { code: 'chf', label: 'Swiss Franc (CHF)' },
-  { code: 'aed', label: 'UAE Dirham (AED)' },
-  { code: 'sar', label: 'Saudi Riyal (SAR)' },
-  { code: 'gbp', label: 'British Pound Sterling (GBP)' },
-];
-
 interface CurrencySelectorProps {
   value: string;
   onChange: (currency: string) => void;
 }
 
+/**
+ * CurrencySelector component for selecting a currency.
+ * Options are sourced from the shared CURRENCY_OPTIONS utility.
+ */
 export function CurrencySelector({ value, onChange }: CurrencySelectorProps): React.ReactElement {
   return (
     <div className="w-full">
@@ -72,7 +62,7 @@ export function CurrencySelector({ value, onChange }: CurrencySelectorProps): Re
         onChange={e => onChange(e.target.value)}
         aria-label="Select currency"
       >
-        {currencyOptions.map(option => (
+        {CURRENCY_OPTIONS.map(option => (
           <option key={option.code} value={option.code}>
             {option.label}
           </option>
