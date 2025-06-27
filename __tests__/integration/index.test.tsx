@@ -4,6 +4,8 @@ import Home from '@/pages/index';
 import * as cryptoApi from '@/pages/api/cryptoApi';
 import { Provider } from 'react-redux';
 import { store } from '@/store';
+import { CurrencySelector } from '@/components/CoinSelector';
+import { setCurrency } from '@/store/cryptoSlice';
 
 jest.mock('@/pages/api/cryptoApi');
 
@@ -85,9 +87,11 @@ describe('Home Page Integration', () => {
   it('changes selected coin and updates chart', async () => {
     renderHome();
     await waitFor(() => expect(screen.getByText('Bitcoin')).toBeInTheDocument());
-    const select = screen.getByRole('combobox');
-    fireEvent.change(select, { target: { value: 'ethereum' } });
-    expect((select as HTMLSelectElement).value).toBe('ethereum');
+    const selects = screen.getAllByRole('combobox');
+    // The second select is the coin selector
+    const coinSelect = selects[1];
+    fireEvent.change(coinSelect, { target: { value: 'ethereum' } });
+    expect((coinSelect as HTMLSelectElement).value).toBe('ethereum');
     // Chart will show loading, then data
     await waitFor(() => expect(screen.queryByText(/loading/i)).not.toBeInTheDocument());
     expect(screen.getByRole('img')).toBeInTheDocument();
@@ -103,5 +107,14 @@ describe('Home Page Integration', () => {
     // Switch to Radar Chart (should trigger top market caps fetch)
     fireEvent.click(screen.getByText('Radar Chart'));
     await waitFor(() => expect(cryptoApi.getTopMarketCaps).toHaveBeenCalled());
+  });
+
+  it('renders CurrencySelector and changes currency', () => {
+    const mockDispatch = jest.fn();
+    render(<CurrencySelector value="usd" onChange={mockDispatch} />);
+    const select = screen.getByLabelText('Select currency');
+    expect(select).toHaveValue('usd');
+    fireEvent.change(select, { target: { value: 'eur' } });
+    expect(mockDispatch).toHaveBeenCalledWith('eur');
   });
 });
