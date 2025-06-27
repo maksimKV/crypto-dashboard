@@ -18,6 +18,7 @@ import {
 
 import { transformLineData } from '@/utils/chartHelpers';
 import { selectMarketChartData, selectLoadingChart, selectChartError, selectCurrency } from '@/store/selectors';
+import { getCurrencyLabel } from '@/utils/cacheUtils';
 
 // Register necessary Chart.js components for line charts
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
@@ -42,20 +43,6 @@ function CryptoLineChartComponent({ coinId }: CryptoChartProps): ReactElement {
   // Memoize chart data transformation for performance
   const chartData = useMemo(() => (data ? transformLineData(data, coinId) : null), [data, coinId]);
 
-  // Helper to get currency symbol or code
-  const getCurrencyLabel = () => {
-    switch (currency) {
-      case 'usd': return '$';
-      case 'eur': return '€';
-      case 'bgn': return 'лв';
-      case 'chf': return 'Fr.';
-      case 'aed': return 'د.إ';
-      case 'sar': return 'ر.س';
-      case 'gbp': return '£';
-      default: return currency.toUpperCase();
-    }
-  };
-
   if (loading) return <p>Loading...</p>;
   if (error) return <p className="text-red-600">Error: {error}</p>;
   if (!chartData) return <p>No data to display.</p>;
@@ -71,7 +58,7 @@ function CryptoLineChartComponent({ coinId }: CryptoChartProps): ReactElement {
           // Custom label to format price with 2 decimal places and currency sign
           label: context => {
             const value = context.parsed.y;
-            const label = getCurrencyLabel();
+            const label = getCurrencyLabel(currency);
             if (currency === 'bgn' || currency === 'chf') {
               return `Price: ${value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${label}`;
             }
@@ -90,12 +77,12 @@ function CryptoLineChartComponent({ coinId }: CryptoChartProps): ReactElement {
       y: {
         title: {
           display: true,
-          text: `Price (${getCurrencyLabel()})`,
+          text: `Price (${getCurrencyLabel(currency)})`,
         },
         ticks: {
           // Format Y-axis ticks with currency sign and thousands separator
           callback: val => {
-            const label = getCurrencyLabel();
+            const label = getCurrencyLabel(currency);
             if (currency === 'bgn' || currency === 'chf') {
               return `${Number(val).toLocaleString()} ${label}`;
             }

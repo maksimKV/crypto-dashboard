@@ -23,4 +23,22 @@ export function getErrorMessage(error: unknown, fallback = 'Unknown error'): str
     return error.message;
   }
   return fallback;
+}
+
+/**
+ * Returns the currency symbol or code for a given currency string.
+ * @param currency - The currency code (e.g., 'usd', 'eur', etc.)
+ * @returns The currency symbol or code.
+ */
+export function getCurrencyLabel(currency: string): string {
+  switch (currency) {
+    case 'usd': return '$';
+    case 'eur': return '€';
+    case 'bgn': return 'лв';
+    case 'chf': return 'Fr.';
+    case 'aed': return 'د.إ';
+    case 'sar': return 'ر.س';
+    case 'gbp': return '£';
+    default: return currency ? currency.toUpperCase() : '';
+  }
 } 

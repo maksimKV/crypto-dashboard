@@ -15,6 +15,7 @@ import {
 } from 'chart.js';
 
 import { selectTopMarketCaps, selectLoadingTopCaps, selectTopCapsError, selectCurrency } from '@/store/selectors';
+import { getCurrencyLabel } from '@/utils/cacheUtils';
 
 // Register necessary chart.js components for Radar chart
 ChartJS.register(RadialLinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
@@ -25,20 +26,6 @@ function CryptoRadarChartComponent(): ReactElement {
   const topCoins = useSelector(selectTopMarketCaps) || [];
   const loading = useSelector(selectLoadingTopCaps);
   const error = useSelector(selectTopCapsError);
-
-  // Helper to get currency symbol or code
-  const getCurrencyLabel = () => {
-    switch (currency) {
-      case 'usd': return '$';
-      case 'eur': return '€';
-      case 'bgn': return 'лв';
-      case 'chf': return 'Fr.';
-      case 'aed': return 'د.إ';
-      case 'sar': return 'ر.س';
-      case 'gbp': return '£';
-      default: return currency.toUpperCase();
-    }
-  };
 
   // Fetch top market caps if not loaded
   useEffect(() => {
@@ -54,8 +41,8 @@ function CryptoRadarChartComponent(): ReactElement {
   // Prepare data for Radar chart: comparing market_cap, total_volume, price_change_percentage_24h
   const data = {
     labels: [
-      `Market Cap (${getCurrencyLabel()})`,
-      `Volume (${getCurrencyLabel()})`,
+      `Market Cap (${getCurrencyLabel(currency)})`,
+      `Volume (${getCurrencyLabel(currency)})`,
       'Price Change % (24h)',
     ],
     datasets: topCoins.map((coin, index) => ({
@@ -92,7 +79,7 @@ function CryptoRadarChartComponent(): ReactElement {
             if (axisLabel.includes('Price Change')) {
               return `${label}: ${value.toFixed(2)}%`;
             }
-            const currencyLabel = getCurrencyLabel();
+            const currencyLabel = getCurrencyLabel(currency);
             if (currency === 'bgn' || currency === 'chf') {
               return `${label}: ${value.toLocaleString()} ${currencyLabel}`;
             }
@@ -122,7 +109,7 @@ function CryptoRadarChartComponent(): ReactElement {
               if (val < 10) {
                 return val.toString();
               }
-              const currencyLabel = getCurrencyLabel();
+              const currencyLabel = getCurrencyLabel(currency);
               if (currency === 'bgn' || currency === 'chf') {
                 return `${val.toLocaleString()} ${currencyLabel}`;
               }

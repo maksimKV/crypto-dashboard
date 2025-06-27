@@ -17,6 +17,7 @@ import {
 
 import { transformBarData } from '@/utils/chartHelpers';
 import { selectMarketChartData, selectLoadingChart, selectChartError, selectCurrency } from '@/store/selectors';
+import { getCurrencyLabel } from '@/utils/cacheUtils';
 
 // Register necessary Chart.js components for bar charts
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
@@ -41,20 +42,6 @@ function CryptoBarChartComponent({ coinId }: CryptoChartProps): ReactElement {
   // Memoize data transformation for performance
   const chartData = useMemo(() => (data ? transformBarData(data, coinId) : null), [data, coinId]);
 
-  // Helper to get currency symbol or code
-  const getCurrencyLabel = () => {
-    switch (currency) {
-      case 'usd': return '$';
-      case 'eur': return '€';
-      case 'bgn': return 'лв';
-      case 'chf': return 'Fr.';
-      case 'aed': return 'د.إ';
-      case 'sar': return 'ر.س';
-      case 'gbp': return '£';
-      default: return currency.toUpperCase();
-    }
-  };
-
   if (loading) return <p>Loading...</p>;
   if (error) return <p className="text-red-600">Error: {error}</p>;
   if (!chartData) return <p>No data to display.</p>;
@@ -70,7 +57,7 @@ function CryptoBarChartComponent({ coinId }: CryptoChartProps): ReactElement {
           // Custom label to format volume with currency sign and thousands separator
           label: context => {
             const value = context.parsed.y;
-            const label = getCurrencyLabel();
+            const label = getCurrencyLabel(currency);
             if (currency === 'bgn' || currency === 'chf') {
               return `Volume: ${value.toLocaleString()} ${label}`;
             }
@@ -89,12 +76,12 @@ function CryptoBarChartComponent({ coinId }: CryptoChartProps): ReactElement {
       y: {
         title: {
           display: true,
-          text: `Volume (${getCurrencyLabel()})`,
+          text: `Volume (${getCurrencyLabel(currency)})`,
         },
         ticks: {
           // Format Y-axis ticks with currency sign and thousands separator
           callback: val => {
-            const label = getCurrencyLabel();
+            const label = getCurrencyLabel(currency);
             if (currency === 'bgn' || currency === 'chf') {
               return `${Number(val).toLocaleString()} ${label}`;
             }
