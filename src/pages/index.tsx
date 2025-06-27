@@ -13,6 +13,8 @@ import {
 } from '@/store/selectors';
 import { Tabs } from '@/components/Tabs';
 import { CoinSelector, CurrencySelector } from '@/components/CoinSelector';
+import { fetchCryptoData } from '@/utils/fetchData';
+import { CoinData } from '@/types/chartTypes';
 
 // Lazy load chart components with proper TypeScript typing
 const CryptoLineChart = React.lazy(() =>
@@ -46,7 +48,7 @@ const tabs = [
   { name: 'Radar Chart', key: 'radar' },
 ];
 
-export default function Home(): ReactElement {
+export default function Home({ initialCoins = [] }: { initialCoins?: CoinData[] }): ReactElement {
   const dispatch = useDispatch<AppDispatch>();
   const coins = useSelector(selectCoins);
   const loadingCoins = useSelector(selectLoadingCoins);
@@ -63,13 +65,20 @@ export default function Home(): ReactElement {
   // Calculate total number of pages once to avoid repeated calculations
   const totalPages = Math.ceil(coins.length / itemsPerPage);
 
+  // Hydrate Redux store with initialCoins if present
   useEffect(() => {
-    if (coins.length === 0) {
+    if (initialCoins.length > 0 && coins.length === 0) {
+      dispatch({ type: 'crypto/fetchCoins/fulfilled', payload: initialCoins });
+    }
+  }, [initialCoins, coins.length, dispatch]);
+
+  useEffect(() => {
+    if (coins.length === 0 && initialCoins.length === 0) {
       dispatch(fetchCoins());
     } else if (!selectedCoin && coins.length > 0) {
       setSelectedCoin(coins[0].id);
     }
-  }, [coins, selectedCoin, dispatch, currency]);
+  }, [coins, selectedCoin, dispatch, currency, initialCoins.length]);
 
   useEffect(() => {
     if (activeTab === 'radar' && topMarketCaps.length === 0 && !loadingTopCaps) {
@@ -185,4 +194,14 @@ export default function Home(): ReactElement {
       )}
     </main>
   );
+}
+
+// Add getServerSideProps for SSR
+export async function getServerSideProps() {
+  try {
+    const initialCoins = await fetchCryptoData('usd');
+    return { props: { initialCoins } };
+  } catch {
+    return { props: { initialCoins: [] } };
+  }
 }
