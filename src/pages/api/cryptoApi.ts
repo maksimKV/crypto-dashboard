@@ -75,10 +75,7 @@ export async function getMarketChart(coinId: string, currency: string = 'usd'): 
  * @throws Will throw an error if the network request fails
  */
 export async function getTopMarketCaps(currency: string = 'usd'): Promise<CoinData[]> {
-  const supported = [
-    'usd','eur','gbp','jpy','aud','cad','chf','sek','nzd','mxn','sgd','hkd','btc','eth','bnb','idr','inr','rub','zar','try','brl','pln','thb','krw','myr','twd','dkk','czk','huf','ils','clp','php','aed','sar','vnd','ngn','uah','cop','pen','ars','isk','ron','hrk'
-  ];
-  const priceChangeParam = supported.includes(currency.toLowerCase()) ? '&price_change_percentage=24h,7d' : '';
+  const priceChangeParam = SUPPORTED_CURRENCIES.includes(currency.toLowerCase()) ? '&price_change_percentage=24h,7d' : '';
   const url = `${BASE_URL}/coins/markets?vs_currency=${currency}&order=market_cap_desc&per_page=5&page=1${priceChangeParam}`;
   return await fetchWithCache<CoinData[]>(url);
 }
