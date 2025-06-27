@@ -1,7 +1,7 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { CoinData, MarketChartData } from '@/types/chartTypes';
 import { LRUCache } from 'lru-cache';
-import { CACHE_TTL } from '@/utils/cacheUtils';
+import { CACHE_TTL, getErrorMessage } from '@/utils/cacheUtils';
 
 // Base URL for CoinGecko API endpoints
 const BASE_URL = 'https://api.coingecko.com/api/v3';
@@ -77,10 +77,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     const data = await getCoins(currency as string);
     return res.status(200).json(data);
   } catch (error: unknown) {
-    let message = 'Internal server error';
-    if (typeof error === 'object' && error && 'message' in error && typeof (error as { message?: unknown }).message === 'string') {
-      message = (error as { message: string }).message;
-    }
+    // Log the error for server-side analysis
+    console.error('API Error:', error);
+    // Use getErrorMessage utility for consistent error extraction
+    const message = getErrorMessage(error, 'Internal server error');
     return res.status(500).json({ error: message });
   }
 }
