@@ -30,8 +30,10 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
     if (typeof Sentry !== 'undefined' && typeof Sentry.captureException === 'function') {
       Sentry.captureException(error);
     }
-    // Also log to console for local debugging
-    console.error('ErrorBoundary caught an error', error, info);
+    // Only log to console in development
+    if (process.env.NODE_ENV === 'development') {
+      console.error('ErrorBoundary caught an error', error, info);
+    }
   }
 
   render(): ReactElement {
