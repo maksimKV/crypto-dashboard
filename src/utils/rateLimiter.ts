@@ -1,5 +1,6 @@
 import LRUCache from 'lru-cache';
 import { NextApiRequest } from 'next';
+import requestIp from 'request-ip';
 
 const rateLimitWindowMs = 60 * 1000; // Time window for rate limiting (1 minute)
 const maxRequestsPerWindow = 10;     // Max allowed requests per IP per time window
@@ -10,11 +11,8 @@ const rateLimiterCache = new LRUCache<string, { count: number; timestamp: number
 });
 
 export function rateLimit(req: NextApiRequest): boolean {
-  // Extract client IP from headers or socket
-  const ip =
-    req.headers['x-forwarded-for']?.toString().split(',')[0] ||
-    req.socket.remoteAddress ||
-    'unknown';
+  // Use request-ip to extract client IP securely
+  const ip = requestIp.getClientIp(req) || 'unknown';
 
   const now = Date.now();
   const entry = rateLimiterCache.get(ip);
