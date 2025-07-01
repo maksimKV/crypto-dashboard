@@ -15,6 +15,7 @@ import { Tabs } from '@/components/Tabs';
 import { CoinSelector, CurrencySelector } from '@/components/CoinSelector';
 import { fetchCryptoData } from '@/utils/fetchData';
 import { CoinData } from '@/types/chartTypes';
+import { DashboardHeader } from '@/components/DashboardHeader';
 
 // Lazy load chart components with proper TypeScript typing
 const CryptoLineChart = React.lazy(() =>
@@ -113,8 +114,14 @@ export default function Home({ initialCoins = [] }: { initialCoins?: CoinData[] 
   const paginatedCoins = coins.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 
   return (
-    <main className="p-8 max-w-6xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Crypto Dashboard</h1>
+    <main className="font-sans p-4 sm:p-8 max-w-6xl mx-auto min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100">
+      <DashboardHeader
+        title="Crypto Dashboard"
+        subtitle="Visualize cryptocurrency prices, volumes, and market share with interactive charts."
+        tabs={tabs}
+        activeTab={activeTab}
+        onTabChange={handleTabChange}
+      />
 
       {/* Loading and error states for coins */}
       {loadingCoins && <p>Loading coins...</p>}
@@ -170,9 +177,6 @@ export default function Home({ initialCoins = [] }: { initialCoins?: CoinData[] 
               </div>
             </div>
           )}
-
-          {/* Chart tabs */}
-          <Tabs tabs={tabs} activeKey={activeTab} onChange={handleTabChange} />
 
           {/* Chart container */}
           <div className="bg-white p-6 shadow rounded-lg border border-gray-200 mt-4">
