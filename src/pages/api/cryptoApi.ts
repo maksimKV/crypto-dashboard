@@ -29,8 +29,21 @@ function sanitizeCoinId(input: unknown): string | null {
 async function fetchWithCache<T extends object>(url: string): Promise<T> {
   const cached = apiCache.get(url);
   if (cached !== undefined) return cached as T;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Failed to fetch: ${url}`);
+  const res = await fetch(url, {
+    headers: {
+      'User-Agent': 'crypto-dashboard/1.0 (your-email@example.com)',
+      'Accept': 'application/json',
+    },
+  });
+  if (!res.ok) {
+    let errorMsg = `Failed to fetch: ${url}`;
+    if (res.status === 429) {
+      errorMsg = 'CoinGecko API rate limit exceeded. Please wait and try again.';
+    } else if (res.status >= 500) {
+      errorMsg = 'CoinGecko API is currently unavailable. Please try again later.';
+    }
+    throw new Error(errorMsg);
+  }
   const data: T = await res.json();
   apiCache.set(url, data);
   return data;

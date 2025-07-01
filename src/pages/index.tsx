@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, Suspense, ReactElement } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch } from '@/store';
-import { fetchCoins, fetchTopMarketCaps, setCurrency } from '@/store/cryptoSlice';
+import { fetchCoins, fetchMarketChart, fetchTopMarketCaps, setCurrency } from '@/store/cryptoSlice';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import {
   selectCoins,
@@ -49,6 +49,15 @@ const tabs = [
   { name: 'Radar Chart', key: 'radar' },
 ];
 
+// Debounce utility
+function debounce<F extends (...args: any[]) => void>(func: F, wait: number) {
+  let timeout: NodeJS.Timeout;
+  return (...args: Parameters<F>) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+}
+
 export default function Home({ initialCoins = [] }: { initialCoins?: CoinData[] }): ReactElement {
   const dispatch = useDispatch<AppDispatch>();
   const coins = useSelector(selectCoins);
@@ -62,9 +71,25 @@ export default function Home({ initialCoins = [] }: { initialCoins?: CoinData[] 
   const [activeTab, setActiveTab] = useState<string>('line');
   const [page, setPage] = useState<number>(1);
   const itemsPerPage = 20;
+  const [apiError, setApiError] = useState<string | null>(null);
 
   // Calculate total number of pages once to avoid repeated calculations
   const totalPages = Math.ceil(coins.length / itemsPerPage);
+
+  // Debounced dispatchers
+  const debouncedFetchCoins = debounce(() => dispatch(fetchCoins()).catch(handleApiError), 300);
+  const debouncedFetchMarketChart = debounce((coinId: string) => dispatch(fetchMarketChart({ coinId })).catch(handleApiError), 300);
+  const debouncedFetchTopMarketCaps = debounce(() => dispatch(fetchTopMarketCaps()).catch(handleApiError), 300);
+
+  function handleApiError(error: any) {
+    if (error && error.message && error.message.includes('429')) {
+      setApiError('You are making requests too quickly. Please wait a moment and try again.');
+    } else if (error && error.message) {
+      setApiError(error.message);
+    } else {
+      setApiError('An unexpected error occurred.');
+    }
+  }
 
   // Hydrate Redux store with initialCoins if present
   useEffect(() => {
@@ -75,7 +100,7 @@ export default function Home({ initialCoins = [] }: { initialCoins?: CoinData[] 
 
   useEffect(() => {
     if (coins.length === 0 && initialCoins.length === 0) {
-      dispatch(fetchCoins());
+      debouncedFetchCoins();
     } else if (!selectedCoin && coins.length > 0) {
       setSelectedCoin(coins[0].id);
     }
@@ -83,7 +108,7 @@ export default function Home({ initialCoins = [] }: { initialCoins?: CoinData[] 
 
   useEffect(() => {
     if (activeTab === 'radar' && topMarketCaps.length === 0 && !loadingTopCaps) {
-      dispatch(fetchTopMarketCaps());
+      debouncedFetchTopMarketCaps();
     }
   }, [activeTab, topMarketCaps.length, loadingTopCaps, dispatch, currency]);
 
@@ -126,6 +151,7 @@ export default function Home({ initialCoins = [] }: { initialCoins?: CoinData[] 
       {/* Loading and error states for coins */}
       {loadingCoins && <p>Loading coins...</p>}
       {errorCoins && <p className="text-red-600">Error: {errorCoins}</p>}
+      {apiError && <p className="text-red-600 font-semibold">{apiError}</p>}
 
       {/* Fallback when no coins are available, no loading, no error */}
       {!loadingCoins && !errorCoins && coins.length === 0 && (

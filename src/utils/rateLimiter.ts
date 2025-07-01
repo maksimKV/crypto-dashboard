@@ -4,7 +4,7 @@ import Redis from 'ioredis';
 import { LRUCache } from 'lru-cache';
 
 const rateLimitWindowMs = 60 * 1000; // 1 minute
-const maxRequestsPerWindow = 10;
+const maxRequestsPerWindow = 60;
 
 // Redis connection from env
 const redisUrl = process.env.REDIS_URL;
