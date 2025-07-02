@@ -13,7 +13,7 @@ import {
 } from 'chart.js';
 
 import { selectTopMarketCaps, selectLoadingTopCaps, selectTopCapsError, selectCurrency } from '@/store/selectors';
-import { getCurrencyLabel } from '@/utils/cacheUtils';
+import { getCurrencyLabel, getErrorMessage } from '@/utils/cacheUtils';
 
 // Register necessary chart.js components for Pie chart
 ChartJS.register(ArcElement, Tooltip, Legend, Filler);
@@ -30,11 +30,7 @@ function CryptoPieChartComponent(): React.ReactElement {
   useEffect(() => {
     if (topCoins.length === 0) {
       dispatch(fetchTopMarketCaps()).unwrap().catch((err: unknown) => {
-        if (typeof err === 'object' && err !== null && 'message' in err && typeof (err as { message?: unknown }).message === 'string') {
-          setLocalError((err as { message: string }).message);
-        } else {
-          setLocalError('Something went wrong. Please try again later.');
-        }
+        setLocalError(getErrorMessage(err));
       });
     }
   }, [dispatch, topCoins.length]);

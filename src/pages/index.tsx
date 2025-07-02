@@ -15,6 +15,7 @@ import { CoinSelector, CurrencySelector } from '@/components/CoinSelector';
 import { fetchCryptoData } from '@/utils/fetchData';
 import { CoinData } from '@/types/chartTypes';
 import { DashboardHeader } from '@/components/DashboardHeader';
+import { getErrorMessage } from '@/utils/cacheUtils';
 
 // Lazy load chart components with proper TypeScript typing
 const CryptoLineChart = React.lazy(() =>
@@ -86,23 +87,11 @@ export default function Home({ initialCoins = [] }: { initialCoins?: CoinData[] 
   }, 300), [dispatch]);
 
   function handleApiError(error: unknown) {
-    if (
-      typeof error === 'object' &&
-      error !== null &&
-      'message' in error &&
-      typeof (error as { message?: unknown }).message === 'string' &&
-      (error as { message: string }).message.includes('429')
-    ) {
+    const msg = getErrorMessage(error);
+    if (msg.includes('429')) {
       setApiError('You are making requests too quickly. Please wait a moment and try again.');
-    } else if (
-      typeof error === 'object' &&
-      error !== null &&
-      'message' in error &&
-      typeof (error as { message?: unknown }).message === 'string'
-    ) {
-      setApiError((error as { message: string }).message);
     } else {
-      setApiError('Something went wrong. Please try again later.');
+      setApiError(msg);
     }
   }
 

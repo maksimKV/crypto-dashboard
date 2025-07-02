@@ -18,7 +18,7 @@ import {
 
 import { transformBarData } from '@/utils/chartHelpers';
 import { selectMarketChartData, selectLoadingChart, selectChartError, selectCurrency } from '@/store/selectors';
-import { getCurrencyLabel } from '@/utils/cacheUtils';
+import { getCurrencyLabel, getErrorMessage } from '@/utils/cacheUtils';
 
 // Register necessary Chart.js components for bar charts
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, Filler);
@@ -39,11 +39,7 @@ function CryptoBarChartComponent({ coinId }: CryptoChartProps): React.ReactEleme
   useEffect(() => {
     if (!coinId || data) return;
     dispatch(fetchMarketChart({ coinId })).unwrap().catch((err: unknown) => {
-      if (typeof err === 'object' && err !== null && 'message' in err && typeof (err as { message?: unknown }).message === 'string') {
-        setLocalError((err as { message: string }).message);
-      } else {
-        setLocalError('Something went wrong. Please try again later.');
-      }
+      setLocalError(getErrorMessage(err));
     });
   }, [dispatch, coinId, data, currency]);
 
