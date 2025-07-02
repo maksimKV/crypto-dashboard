@@ -42,7 +42,7 @@ function CryptoBarChartComponent({ coinId }: CryptoChartProps): React.ReactEleme
       if (typeof err === 'object' && err !== null && 'message' in err && typeof (err as { message?: unknown }).message === 'string') {
         setLocalError((err as { message: string }).message);
       } else {
-        setLocalError('An unexpected error occurred while fetching chart data.');
+        setLocalError('Something went wrong. Please try again later.');
       }
     });
   }, [dispatch, coinId, data, currency]);

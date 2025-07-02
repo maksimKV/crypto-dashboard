@@ -73,7 +73,7 @@ export const fetchCoins = createAsyncThunk('crypto/fetchCoins', async (_, { getS
     if (typeof error === 'object' && error !== null && 'message' in error && typeof (error as { message?: unknown }).message === 'string') {
       throw new Error((error as { message: string }).message);
     }
-    throw new Error('An unexpected error occurred while fetching coins.');
+    throw new Error('Something went wrong. Please try again later.');
   }
 });
 
@@ -100,7 +100,7 @@ export const fetchMarketChart = createAsyncThunk(
       if (typeof error === 'object' && error !== null && 'message' in error && typeof (error as { message?: unknown }).message === 'string') {
         throw new Error((error as { message: string }).message);
       }
-      throw new Error('An unexpected error occurred while fetching market chart.');
+      throw new Error('Something went wrong. Please try again later.');
     }
   }
 );
@@ -126,7 +126,7 @@ export const fetchTopMarketCaps = createAsyncThunk(
       if (typeof error === 'object' && error !== null && 'message' in error && typeof (error as { message?: unknown }).message === 'string') {
         throw new Error((error as { message: string }).message);
       }
-      throw new Error('An unexpected error occurred while fetching top market caps.');
+      throw new Error('Something went wrong. Please try again later.');
     }
   }
 );

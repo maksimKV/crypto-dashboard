@@ -35,7 +35,7 @@ function CryptoRadarChartComponent(): React.ReactElement {
         if (typeof err === 'object' && err !== null && 'message' in err && typeof (err as { message?: unknown }).message === 'string') {
           setLocalError((err as { message: string }).message);
         } else {
-          setLocalError('An unexpected error occurred while fetching top market caps.');
+          setLocalError('Something went wrong. Please try again later.');
         }
       });
     }

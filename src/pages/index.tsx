@@ -102,7 +102,7 @@ export default function Home({ initialCoins = [] }: { initialCoins?: CoinData[] 
     ) {
       setApiError((error as { message: string }).message);
     } else {
-      setApiError('An unexpected error occurred.');
+      setApiError('Something went wrong. Please try again later.');
     }
   }
 
