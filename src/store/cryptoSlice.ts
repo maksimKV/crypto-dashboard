@@ -60,10 +60,18 @@ export const fetchCoins = createAsyncThunk('crypto/fetchCoins', async (_, { getS
   if (state.crypto.coins && isCacheValid(state.crypto.coins.timestamp)) {
     return state.crypto.coins.data;
   }
-  // Fetch from API route
-  const res = await fetch(`/api/cryptoApi?currency=${state.crypto.currency}`);
-  if (!res.ok) throw new Error('Failed to fetch coins');
-  return await res.json();
+  try {
+    const res = await fetch(`/api/cryptoApi?currency=${state.crypto.currency}`);
+    if (!res.ok) {
+      let msg = 'Failed to fetch coins.';
+      if (res.status === 429) msg = 'You are making requests too quickly. Please wait and try again.';
+      else if (res.status >= 500) msg = 'The server is currently unavailable. Please try again later.';
+      throw new Error(msg);
+    }
+    return await res.json();
+  } catch (error: any) {
+    throw new Error(error?.message || 'An unexpected error occurred while fetching coins.');
+  }
 });
 
 // Async thunk to fetch market chart data for a specific coin, using cached data if valid
@@ -75,11 +83,19 @@ export const fetchMarketChart = createAsyncThunk(
     if (cached && isCacheValid(cached.timestamp)) {
       return { coinId, data: cached.data };
     }
-    // Fetch from API route
-    const res = await fetch(`/api/cryptoApi?coinId=${coinId}&currency=${state.crypto.currency}`);
-    if (!res.ok) throw new Error('Failed to fetch market chart');
-    const data = await res.json();
-    return { coinId, data };
+    try {
+      const res = await fetch(`/api/cryptoApi?coinId=${coinId}&currency=${state.crypto.currency}`);
+      if (!res.ok) {
+        let msg = 'Failed to fetch market chart.';
+        if (res.status === 429) msg = 'You are making requests too quickly. Please wait and try again.';
+        else if (res.status >= 500) msg = 'The server is currently unavailable. Please try again later.';
+        throw new Error(msg);
+      }
+      const data = await res.json();
+      return { coinId, data };
+    } catch (error: any) {
+      throw new Error(error?.message || 'An unexpected error occurred while fetching market chart.');
+    }
   }
 );
 
@@ -91,10 +107,18 @@ export const fetchTopMarketCaps = createAsyncThunk(
     if (state.crypto.topMarketCaps && isCacheValid(state.crypto.topMarketCaps.timestamp)) {
       return state.crypto.topMarketCaps.data;
     }
-    // Fetch from API route
-    const res = await fetch(`/api/cryptoApi?topMarketCaps=true&currency=${state.crypto.currency}`);
-    if (!res.ok) throw new Error('Failed to fetch top market caps');
-    return await res.json();
+    try {
+      const res = await fetch(`/api/cryptoApi?topMarketCaps=true&currency=${state.crypto.currency}`);
+      if (!res.ok) {
+        let msg = 'Failed to fetch top market caps.';
+        if (res.status === 429) msg = 'You are making requests too quickly. Please wait and try again.';
+        else if (res.status >= 500) msg = 'The server is currently unavailable. Please try again later.';
+        throw new Error(msg);
+      }
+      return await res.json();
+    } catch (error: any) {
+      throw new Error(error?.message || 'An unexpected error occurred while fetching top market caps.');
+    }
   }
 );
 
