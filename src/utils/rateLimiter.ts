@@ -2,12 +2,18 @@ import { NextApiRequest } from 'next';
 import requestIp from 'request-ip';
 import Redis from 'ioredis';
 import { LRUCache } from 'lru-cache';
+import { z } from 'zod';
 
 const rateLimitWindowMs = 60 * 1000; // 1 minute
 const maxRequestsPerWindow = 60;
 
-// Redis connection from env
-const redisUrl = process.env.REDIS_URL;
+// Validate REDIS_URL using zod
+const envSchema = z.object({
+  REDIS_URL: z.string().url().optional(),
+});
+const parsedEnv = envSchema.safeParse(process.env);
+const redisUrl = parsedEnv.success ? parsedEnv.data.REDIS_URL : undefined;
+
 let redis: Redis | null = null;
 if (redisUrl) {
   redis = new Redis(redisUrl);

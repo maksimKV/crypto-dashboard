@@ -1,8 +1,16 @@
 import React, { ErrorInfo, ReactNode, ReactElement } from 'react';
 import * as Sentry from '@sentry/browser';
+import { z } from 'zod';
 
 // Track if Sentry warning has been shown in production
 let sentryWarned = false;
+
+// Validate NODE_ENV using zod
+const envSchema = z.object({
+  NODE_ENV: z.enum(['development', 'production', 'test']).optional(),
+});
+const parsedEnv = envSchema.safeParse(process.env);
+const NODE_ENV = parsedEnv.success ? parsedEnv.data.NODE_ENV : undefined;
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -33,7 +41,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
     const sentryConfigured = typeof Sentry !== 'undefined' && typeof Sentry.captureException === 'function';
     if (sentryConfigured) {
       Sentry.captureException(error);
-    } else if (process.env.NODE_ENV === 'production') {
+    } else if (NODE_ENV === 'production') {
       // Fallback: send error to a custom API endpoint for logging
       fetch('/api/logError', {
         method: 'POST',
@@ -46,7 +54,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
       });
     }
     // Only log to console in development
-    if (process.env.NODE_ENV === 'development') {
+    if (NODE_ENV === 'development') {
       if (!sentryConfigured && !sentryWarned) {
         sentryWarned = true;
         // eslint-disable-next-line no-console
@@ -58,7 +66,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
 
   render(): ReactElement {
     if (this.state.hasError) {
-      if (process.env.NODE_ENV === 'development') {
+      if (NODE_ENV === 'development') {
         return (
           <div className="text-red-600">
             <p>Something went wrong.</p>

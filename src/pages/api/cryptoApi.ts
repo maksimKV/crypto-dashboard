@@ -4,9 +4,19 @@ import { LRUCache } from 'lru-cache';
 import { CACHE_TTL, getErrorMessage } from '@/utils/cacheUtils';
 import { rateLimit } from '@/utils/rateLimiter';
 import { SUPPORTED_CURRENCIES } from '@/utils/currencies';
+import { z } from 'zod';
+
+// Validate environment variables using zod
+const envSchema = z.object({
+  COINGECKO_API_BASE_URL: z.string().url().optional(),
+  NODE_ENV: z.enum(['development', 'production', 'test']).optional(),
+});
+const parsedEnv = envSchema.safeParse(process.env);
+const COINGECKO_API_BASE_URL = parsedEnv.success ? parsedEnv.data.COINGECKO_API_BASE_URL : undefined;
+const NODE_ENV = parsedEnv.success ? parsedEnv.data.NODE_ENV : undefined;
 
 // Use environment variable for CoinGecko API base URL, fallback to default if not set
-const BASE_URL = process.env.COINGECKO_API_BASE_URL || 'https://api.coingecko.com/api/v3';
+const BASE_URL = COINGECKO_API_BASE_URL || 'https://api.coingecko.com/api/v3';
 
 // LRU cache for API responses
 const apiCache = new LRUCache<string, object>({ max: 100, ttl: CACHE_TTL });
@@ -126,7 +136,7 @@ export async function handler(req: NextApiRequest, res: NextApiResponse) {
     return res.status(200).json(data);
   } catch (error: unknown) {
     // Log the error for server-side analysis only in development
-    if (process.env.NODE_ENV === 'development') {
+    if (NODE_ENV === 'development') {
       console.error('API Error:', error);
     }
     // Use getErrorMessage utility for consistent error extraction
