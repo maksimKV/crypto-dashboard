@@ -1,9 +1,27 @@
 import { CoinData } from '@/types/chartTypes';
 
+// Helper to validate URLs (allow only http(s) and relative URLs)
+function isValidUrl(url: string): boolean {
+  try {
+    // Allow relative URLs (for internal API calls)
+    if (url.startsWith('/')) return true;
+    const parsed = new URL(url);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
 /**
- * Generic fetch utility for API calls with error handling.
+ * Generic fetch utility for API calls with error handling and input validation.
  */
 export async function fetchApiData<T>(url: string, errorMsg: string): Promise<T> {
+  if (!isValidUrl(url)) {
+    throw new Error('Invalid URL provided to fetchApiData');
+  }
+  if (typeof errorMsg !== 'string' || errorMsg.trim().length === 0) {
+    throw new Error('Invalid error message provided to fetchApiData');
+  }
   const response = await fetch(url);
   if (!response.ok) {
     throw new Error(errorMsg);

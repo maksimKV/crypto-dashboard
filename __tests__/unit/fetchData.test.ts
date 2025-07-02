@@ -53,3 +53,18 @@ describe('fetchCryptoData', () => {
     await expect(fetchCryptoData('usd')).rejects.toThrow('Failed to fetch crypto data');
   });
 });
+
+describe('fetchCryptoData input validation', () => {
+  it('throws an error if called with an invalid currency that results in an invalid URL', async () => {
+    // This should still produce a valid relative URL, so to test fetchApiData directly:
+    const { fetchApiData } = await import('@/utils/fetchData');
+    await expect(fetchApiData('ftp://malicious.com', 'Error')).rejects.toThrow('Invalid URL provided to fetchApiData');
+    await expect(fetchApiData('not-a-url', 'Error')).rejects.toThrow('Invalid URL provided to fetchApiData');
+  });
+
+  it('throws an error if errorMsg is empty', async () => {
+    const { fetchApiData } = await import('@/utils/fetchData');
+    await expect(fetchApiData('/api/cryptoApi?currency=usd', '')).rejects.toThrow('Invalid error message provided to fetchApiData');
+    await expect(fetchApiData('/api/cryptoApi?currency=usd', '   ')).rejects.toThrow('Invalid error message provided to fetchApiData');
+  });
+});

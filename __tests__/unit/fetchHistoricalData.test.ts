@@ -53,3 +53,17 @@ describe('fetchHistoricalData', () => {
     expect(global.fetch).toHaveBeenCalledWith('/api/cryptoApi?coinId=ethereum&currency=usd');
   });
 });
+
+describe('fetchHistoricalData input validation', () => {
+  it('throws an error if called with a URL that is not http(s) or relative', async () => {
+    const { fetchApiData } = await import('@/utils/fetchData');
+    await expect(fetchApiData('javascript:alert(1)', 'Error')).rejects.toThrow('Invalid URL provided to fetchApiData');
+    await expect(fetchApiData('http://', 'Error')).rejects.toThrow('Invalid URL provided to fetchApiData');
+  });
+
+  it('throws an error if errorMsg is empty', async () => {
+    const { fetchApiData } = await import('@/utils/fetchData');
+    await expect(fetchApiData('/api/cryptoApi?coinId=bitcoin', '')).rejects.toThrow('Invalid error message provided to fetchApiData');
+    await expect(fetchApiData('/api/cryptoApi?coinId=bitcoin', '   ')).rejects.toThrow('Invalid error message provided to fetchApiData');
+  });
+});
