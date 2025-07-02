@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, Suspense, ReactElement } from 'react';
+import React, { useEffect, useState, useCallback, Suspense, ReactElement, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch } from '@/store';
 import { fetchCoins, fetchMarketChart, fetchTopMarketCaps, setCurrency } from '@/store/cryptoSlice';
@@ -77,12 +77,18 @@ export function Home({ initialCoins = [] }: { initialCoins?: CoinData[] }): Reac
   // Calculate total number of pages once to avoid repeated calculations
   const totalPages = Math.ceil(coins.length / itemsPerPage);
 
-  // Debounced dispatchers
-  const debouncedFetchCoins = debounce(() => {
+  // Memoized debounced dispatchers
+  const debouncedFetchCoins = useMemo(() => debounce(() => {
     dispatch(fetchCoins()).catch(handleApiError);
-  }, 300);
-  const debouncedFetchMarketChart = debounce((coinId: string) => dispatch(fetchMarketChart({ coinId })).catch(handleApiError), 300);
-  const debouncedFetchTopMarketCaps = debounce(() => dispatch(fetchTopMarketCaps()).catch(handleApiError), 300);
+  }, 300), [dispatch]);
+
+  const debouncedFetchMarketChart = useMemo(() => debounce((coinId: string) => {
+    dispatch(fetchMarketChart({ coinId })).catch(handleApiError);
+  }, 300), [dispatch]);
+
+  const debouncedFetchTopMarketCaps = useMemo(() => debounce(() => {
+    dispatch(fetchTopMarketCaps()).catch(handleApiError);
+  }, 300), [dispatch]);
 
   function handleApiError(error: any) {
     if (error && error.message && error.message.includes('429')) {
