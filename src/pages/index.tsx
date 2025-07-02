@@ -72,6 +72,7 @@ export default function Home({ initialCoins = [] }: { initialCoins?: CoinData[] 
   const [page, setPage] = useState<number>(1);
   const itemsPerPage = 20;
   const [apiError, setApiError] = useState<string | null>(null);
+  const [windowWidth, setWindowWidth] = useState<number>(typeof window !== 'undefined' ? window.innerWidth : 1200);
 
   // Calculate total number of pages once to avoid repeated calculations
   const totalPages = Math.ceil(coins.length / itemsPerPage);
@@ -112,6 +113,14 @@ export default function Home({ initialCoins = [] }: { initialCoins?: CoinData[] 
     }
   }, [activeTab, topMarketCaps.length, loadingTopCaps, dispatch, currency]);
 
+  useEffect(() => {
+    function handleResize() {
+      setWindowWidth(window.innerWidth);
+    }
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const handleCoinChange = useCallback((coinId: string) => {
     setSelectedCoin(coinId);
   }, []);
@@ -146,7 +155,48 @@ export default function Home({ initialCoins = [] }: { initialCoins?: CoinData[] 
         tabs={tabs}
         activeTab={activeTab}
         onTabChange={handleTabChange}
-      />
+      >
+        <div className="w-full flex justify-center">
+          <div className="bg-white/80 border border-blue-100 rounded-xl shadow-md px-6 py-4 flex flex-col sm:flex-row items-center justify-center gap-4 w-full max-w-2xl">
+            <div className="w-full sm:w-48">
+              <CurrencySelector value={currency} onChange={handleCurrencyChange} />
+            </div>
+            {(activeTab === 'line' || activeTab === 'bar') && (
+              <div className="w-full sm:w-64">
+                <CoinSelector
+                  coins={paginatedCoins}
+                  selectedCoinId={selectedCoin}
+                  onChange={handleCoinChange}
+                />
+              </div>
+            )}
+            {(activeTab === 'line' || activeTab === 'bar') && (
+              <div className="flex items-center justify-center gap-2 mt-2 sm:mt-0 flex-row">
+                <button
+                  onClick={handlePrevPage}
+                  disabled={page === 1}
+                  className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium shadow-sm"
+                  aria-label="Previous page"
+                >
+                  Previous
+                </button>
+                <span className="flex flex-col items-center justify-center w-16 px-2 py-1 rounded bg-gray-100 text-blue-700 border border-gray-200 align-middle mx-1">
+                  <span className="text-xs font-medium">Page</span>
+                  <span className="text-base font-bold">{page} of {totalPages}</span>
+                </span>
+                <button
+                  onClick={handleNextPage}
+                  disabled={page >= totalPages}
+                  className="px-4 py-2 rounded-lg bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium shadow-sm"
+                  aria-label="Next page"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </DashboardHeader>
 
       {/* Loading and error states for coins */}
       {loadingCoins && <p>Loading coins...</p>}
@@ -161,61 +211,18 @@ export default function Home({ initialCoins = [] }: { initialCoins?: CoinData[] 
       {/* Main content: coin selector, pagination, tabs, and charts */}
       {!loadingCoins && !errorCoins && coins.length > 0 && selectedCoin && (
         <>
-          {/* Currency selector */}
-          <div className="mb-4 w-full sm:w-64">
-            <CurrencySelector value={currency} onChange={handleCurrencyChange} />
-          </div>
-
-          {/* Combined coin selector and pagination */}
-          {(activeTab === 'line' || activeTab === 'bar') && (
-            <div className="mb-6 bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-                <div className="w-full sm:w-auto">
-                  {/* CoinSelector with internal pagination hidden, external pagination used */}
-                  <CoinSelector
-                    coins={paginatedCoins}
-                    selectedCoinId={selectedCoin}
-                    onChange={handleCoinChange}
-                  />
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={handlePrevPage}
-                    disabled={page === 1}
-                    className="px-4 py-2 rounded-md bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    aria-label="Previous page"
-                  >
-                    Previous
-                  </button>
-                  <span className="text-sm text-gray-600">
-                    Page {page} of {totalPages}
-                  </span>
-                  <button
-                    onClick={handleNextPage}
-                    disabled={page >= totalPages}
-                    className="px-4 py-2 rounded-md bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    aria-label="Next page"
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
-
           {/* Chart container */}
-          <div className="bg-white p-6 shadow rounded-lg border border-gray-200 mt-4">
+          <div className="bg-white p-6 shadow rounded-lg border border-gray-200 mt-4 w-full">
             <ErrorBoundary>
               <Suspense fallback={<div className="h-64 flex items-center justify-center">Loading chart...</div>}>
-                {activeTab === 'line' && <CryptoLineChart coinId={selectedCoin} />}
-                {activeTab === 'bar' && <CryptoBarChart coinId={selectedCoin} />}
-                {activeTab === 'pie' && <CryptoPieChart />}
+                {activeTab === 'line' && <CryptoLineChart key={`line-${windowWidth}`} coinId={selectedCoin} />}
+                {activeTab === 'bar' && <CryptoBarChart key={`bar-${windowWidth}`} coinId={selectedCoin} />}
+                {activeTab === 'pie' && <CryptoPieChart key={`pie-${windowWidth}`} />}
                 {activeTab === 'radar' &&
                   (loadingTopCaps ? (
                     <div className="h-64 flex items-center justify-center">Loading radar data...</div>
                   ) : (
-                    <CryptoRadarChart />
+                    <CryptoRadarChart key={`radar-${windowWidth}`} />
                   ))}
               </Suspense>
             </ErrorBoundary>

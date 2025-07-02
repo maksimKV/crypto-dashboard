@@ -55,9 +55,9 @@ interface CurrencySelectorProps {
  */
 export function CurrencySelector({ value, onChange }: CurrencySelectorProps): React.ReactElement {
   return (
-    <div className="w-full">
+    <div className="w-full relative overflow-hidden rounded-xl border border-gray-300 bg-white">
       <select
-        className="w-full p-2.5 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+        className="w-full p-3 pr-8 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all text-base bg-white appearance-none"
         value={value}
         onChange={e => onChange(e.target.value)}
         aria-label="Select currency"
@@ -68,6 +68,12 @@ export function CurrencySelector({ value, onChange }: CurrencySelectorProps): Re
           </option>
         ))}
       </select>
+      {/* Custom dropdown arrow */}
+      <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+        <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </div>
     </div>
   );
 }
