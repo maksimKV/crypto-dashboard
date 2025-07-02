@@ -70,10 +70,7 @@ export const fetchCoins = createAsyncThunk('crypto/fetchCoins', async (_, { getS
     }
     return await res.json();
   } catch (error: unknown) {
-    if (typeof error === 'object' && error !== null && 'message' in error && typeof (error as { message?: unknown }).message === 'string') {
-      throw new Error((error as { message: string }).message);
-    }
-    throw new Error('Something went wrong. Please try again later.');
+    throw new Error(getErrorMessage(error, 'Something went wrong. Please try again later.'));
   }
 });
 
@@ -97,10 +94,7 @@ export const fetchMarketChart = createAsyncThunk(
       const data = await res.json();
       return { coinId, data };
     } catch (error: unknown) {
-      if (typeof error === 'object' && error !== null && 'message' in error && typeof (error as { message?: unknown }).message === 'string') {
-        throw new Error((error as { message: string }).message);
-      }
-      throw new Error('Something went wrong. Please try again later.');
+      throw new Error(getErrorMessage(error, 'Something went wrong. Please try again later.'));
     }
   }
 );
@@ -123,10 +117,7 @@ export const fetchTopMarketCaps = createAsyncThunk(
       }
       return await res.json();
     } catch (error: unknown) {
-      if (typeof error === 'object' && error !== null && 'message' in error && typeof (error as { message?: unknown }).message === 'string') {
-        throw new Error((error as { message: string }).message);
-      }
-      throw new Error('Something went wrong. Please try again later.');
+      throw new Error(getErrorMessage(error, 'Something went wrong. Please try again later.'));
     }
   }
 );
