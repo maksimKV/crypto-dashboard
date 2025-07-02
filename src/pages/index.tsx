@@ -49,10 +49,9 @@ const tabs = [
   { name: 'Radar Chart', key: 'radar' },
 ];
 
-// Update debounce utility to avoid 'any' type
-function debounce<F extends (...args: unknown[]) => void>(func: F, wait: number) {
+function debounce<T extends unknown[]>(func: (...args: T) => void, wait: number) {
   let timeout: NodeJS.Timeout;
-  return (...args: Parameters<F>) => {
+  return (...args: T) => {
     clearTimeout(timeout);
     timeout = setTimeout(() => func(...args), wait);
   };
@@ -84,6 +83,11 @@ export default function Home({ initialCoins = [] }: { initialCoins?: CoinData[] 
 
   const debouncedFetchTopMarketCaps = useMemo(() => debounce(() => {
     dispatch(fetchTopMarketCaps()).unwrap().catch(handleApiError);
+  }, 300), [dispatch]);
+
+  // Debounced currency change
+  const debouncedSetCurrency = useMemo(() => debounce((currency: string) => {
+    dispatch(setCurrency(currency));
   }, 300), [dispatch]);
 
   function handleApiError(error: unknown) {
@@ -145,8 +149,8 @@ export default function Home({ initialCoins = [] }: { initialCoins?: CoinData[] 
   }, [page]);
 
   const handleCurrencyChange = useCallback((currency: string) => {
-    dispatch(setCurrency(currency));
-  }, [dispatch]);
+    debouncedSetCurrency(currency);
+  }, [debouncedSetCurrency]);
 
   const paginatedCoins = coins.slice((page - 1) * itemsPerPage, page * itemsPerPage);
 

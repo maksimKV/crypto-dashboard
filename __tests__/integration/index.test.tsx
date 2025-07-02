@@ -176,13 +176,13 @@ describe('Home Page Integration', () => {
     await waitFor(() => expect(screen.getByRole('img')).toBeInTheDocument());
   });
 
-  it('renders CurrencySelector and changes currency', () => {
+  it('renders CurrencySelector and changes currency', async () => {
     const mockDispatch = jest.fn();
     render(<CurrencySelector value="usd" onChange={mockDispatch} />);
     const select = screen.getByLabelText('Select currency');
     expect(select).toHaveValue('usd');
     fireEvent.change(select, { target: { value: 'eur' } });
-    expect(mockDispatch).toHaveBeenCalledWith('eur');
+    await waitFor(() => expect(mockDispatch).toHaveBeenCalledWith('eur'));
   });
 
   it('paginates coins and disables buttons at boundaries', async () => {
@@ -275,7 +275,7 @@ describe('Home Page Integration', () => {
     // Change currency
     const currencySelect = selects[0];
     fireEvent.change(currencySelect, { target: { value: 'eur' } });
-    expect((currencySelect as HTMLSelectElement).value).toBe('eur');
+    await waitFor(() => expect((currencySelect as HTMLSelectElement).value).toBe('eur'));
     // Switch chart types
     fireEvent.click(screen.getByText('Bar Chart'));
     fireEvent.click(screen.getByText('Pie Chart'));
