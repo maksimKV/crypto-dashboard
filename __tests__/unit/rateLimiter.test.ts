@@ -40,18 +40,18 @@ describe('rateLimit', () => {
     await expect(rateLimit(mockReq)).resolves.toBe(true);
   });
 
-  it('allows up to 10 requests within the window', async () => {
+  it('allows up to 60 requests within the window', async () => {
     // Should allow up to the maximum allowed requests per window
     mockGetClientIp.mockReturnValue('5.6.7.8');
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 60; i++) {
       await expect(rateLimit(mockReq)).resolves.toBe(true);
     }
   });
 
-  it('blocks the 11th request within the window', async () => {
+  it('blocks the 61st request within the window', async () => {
     // Should block requests that exceed the limit within the time window
     mockGetClientIp.mockReturnValue('9.8.7.6');
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 60; i++) {
       await expect(rateLimit(mockReq)).resolves.toBe(true);
     }
     await expect(rateLimit(mockReq)).resolves.toBe(false);
@@ -60,7 +60,7 @@ describe('rateLimit', () => {
   it('resets the count after the window passes', async () => {
     // Should reset the request count after the time window has passed
     mockGetClientIp.mockReturnValue('2.2.2.2');
-    for (let i = 0; i < 10; i++) {
+    for (let i = 0; i < 60; i++) {
       await expect(rateLimit(mockReq)).resolves.toBe(true);
     }
     await expect(rateLimit(mockReq)).resolves.toBe(false);

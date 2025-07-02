@@ -104,8 +104,12 @@ describe('Home Page Integration', () => {
   }
 
   it('renders loading state and then displays coins', async () => {
+    // Mock getCoins to resolve after a short delay
+    (cryptoApi.getCoins as jest.Mock).mockImplementation(
+      () => new Promise(resolve => setTimeout(() => resolve(mockCoins), 50))
+    );
     renderHome();
-    expect(screen.getByText(/loading coins/i)).toBeInTheDocument();
+    await screen.findByText(/loading coins\.\.\./i);
     await waitFor(() => expect(screen.getByText('Bitcoin')).toBeInTheDocument());
     expect(screen.getByText('Ethereum')).toBeInTheDocument();
   });
