@@ -144,3 +144,5 @@ export async function handler(req: NextApiRequest, res: NextApiResponse) {
     return res.status(500).json({ error: message });
   }
 }
+
+export default handler;
