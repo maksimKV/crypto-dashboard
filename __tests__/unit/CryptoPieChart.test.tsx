@@ -7,10 +7,16 @@ import { render, screen } from '@testing-library/react';
 import { CryptoPieChart } from '@/components/CryptoPieChart';
 
 // Mock react-redux hooks
+type UnwrappablePromise = Promise<void> & { unwrap: () => Promise<void> };
+
 jest.mock('react-redux', () => ({
   ...jest.requireActual('react-redux'),
   useSelector: jest.fn(),
-  useDispatch: () => jest.fn(),
+  useDispatch: () => () => {
+    const promise = Promise.resolve() as UnwrappablePromise;
+    promise.unwrap = () => Promise.resolve();
+    return promise;
+  },
 }));
 
 const mockUseSelector = require('react-redux').useSelector;

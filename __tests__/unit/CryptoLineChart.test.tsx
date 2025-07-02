@@ -7,10 +7,16 @@ import { render, screen } from '@testing-library/react';
 import { CryptoLineChart } from '@/components/CryptoLineChart';
 
 // Mock react-redux hooks
+type UnwrappablePromise = Promise<void> & { unwrap: () => Promise<void> };
+
 jest.mock('react-redux', () => ({
   ...jest.requireActual('react-redux'),
   useSelector: jest.fn(),
-  useDispatch: () => jest.fn(),
+  useDispatch: () => () => {
+    const promise = Promise.resolve() as UnwrappablePromise;
+    promise.unwrap = () => Promise.resolve();
+    return promise;
+  },
 }));
 
 const mockUseSelector = require('react-redux').useSelector;
@@ -24,11 +30,15 @@ describe('CryptoLineChart (unit)', () => {
 
   it('renders loading state as no data', () => {
     mockUseSelector.mockImplementation((selector: unknown) => {
-      if (selector.name === 'selectLoadingChart') return true;
-      if (selector.name === 'selectChartError') return null;
-      if (selector.name === 'selectMarketChartData') return null;
-      if (selector.name === 'selectCurrency') return 'usd';
-      return undefined;
+      if (typeof selector === 'function' && selector.name === 'memoized') return undefined;
+      if (typeof selector === 'function') return undefined;
+      switch (selector) {
+        case 'selectLoadingChart': return true;
+        case 'selectChartError': return null;
+        case 'selectMarketChartData': return null;
+        case 'selectCurrency': return 'usd';
+        default: return undefined;
+      }
     });
     render(<CryptoLineChart coinId={coinId} />);
     expect(screen.getByText(/no data to display/i)).toBeInTheDocument();
@@ -36,11 +46,15 @@ describe('CryptoLineChart (unit)', () => {
 
   it('renders error state as no data', () => {
     mockUseSelector.mockImplementation((selector: unknown) => {
-      if (selector.name === 'selectLoadingChart') return false;
-      if (selector.name === 'selectChartError') return 'API error';
-      if (selector.name === 'selectMarketChartData') return null;
-      if (selector.name === 'selectCurrency') return 'usd';
-      return undefined;
+      if (typeof selector === 'function' && selector.name === 'memoized') return undefined;
+      if (typeof selector === 'function') return undefined;
+      switch (selector) {
+        case 'selectLoadingChart': return false;
+        case 'selectChartError': return 'API error';
+        case 'selectMarketChartData': return null;
+        case 'selectCurrency': return 'usd';
+        default: return undefined;
+      }
     });
     render(<CryptoLineChart coinId={coinId} />);
     expect(screen.getByText(/no data to display/i)).toBeInTheDocument();
@@ -48,11 +62,15 @@ describe('CryptoLineChart (unit)', () => {
 
   it('renders no data state', () => {
     mockUseSelector.mockImplementation((selector: unknown) => {
-      if (selector.name === 'selectLoadingChart') return false;
-      if (selector.name === 'selectChartError') return null;
-      if (selector.name === 'selectMarketChartData') return null;
-      if (selector.name === 'selectCurrency') return 'usd';
-      return undefined;
+      if (typeof selector === 'function' && selector.name === 'memoized') return undefined;
+      if (typeof selector === 'function') return undefined;
+      switch (selector) {
+        case 'selectLoadingChart': return false;
+        case 'selectChartError': return null;
+        case 'selectMarketChartData': return null;
+        case 'selectCurrency': return 'usd';
+        default: return undefined;
+      }
     });
     render(<CryptoLineChart coinId={coinId} />);
     expect(screen.getByText(/no data to display/i)).toBeInTheDocument();
@@ -61,9 +79,6 @@ describe('CryptoLineChart (unit)', () => {
   it('renders the line chart with valid data', () => {
     const coinId = 'bitcoin';
     mockUseSelector.mockImplementation((selector: unknown) => {
-      if (selector.name === 'selectLoadingChart') return false;
-      if (selector.name === 'selectChartError') return null;
-      if (selector.name === 'selectCurrency') return 'usd';
       if (typeof selector === 'function' && selector.name === 'memoized') {
         const now = Date.now();
         const mockState = {
@@ -81,20 +96,29 @@ describe('CryptoLineChart (unit)', () => {
         };
         return selector(mockState);
       }
-      return undefined;
+      if (typeof selector === 'function') return undefined;
+      switch (selector) {
+        case 'selectLoadingChart': return false;
+        case 'selectChartError': return null;
+        case 'selectCurrency': return 'usd';
+        default: return undefined;
+      }
     });
     render(<CryptoLineChart coinId={coinId} />);
     expect(screen.getByTestId('mock-line-chart')).toBeInTheDocument();
   });
 
   it('handles malformed data gracefully', () => {
-    // Should not throw or break if data is malformed
     mockUseSelector.mockImplementation((selector: unknown) => {
-      if (selector.name === 'selectLoadingChart') return false;
-      if (selector.name === 'selectChartError') return null;
-      if (selector.name === 'selectMarketChartData') return { prices: null, market_caps: null, total_volumes: null };
-      if (selector.name === 'selectCurrency') return 'usd';
-      return undefined;
+      if (typeof selector === 'function' && selector.name === 'memoized') return undefined;
+      if (typeof selector === 'function') return undefined;
+      switch (selector) {
+        case 'selectLoadingChart': return false;
+        case 'selectChartError': return null;
+        case 'selectMarketChartData': return { prices: null, market_caps: null, total_volumes: null };
+        case 'selectCurrency': return 'usd';
+        default: return undefined;
+      }
     });
     render(<CryptoLineChart coinId={coinId} />);
     expect(screen.getByText(/no data to display/i)).toBeInTheDocument();
