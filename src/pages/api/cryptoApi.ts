@@ -89,7 +89,7 @@ export async function getTopMarketCaps(currency: string = 'usd'): Promise<CoinDa
   return await fetchWithCache<CoinData[]>(url);
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export async function handler(req: NextApiRequest, res: NextApiResponse) {
   // Apply rate limiting
   if (!(await rateLimit(req))) {
     return res.status(429).json({ error: 'Too many requests. Please try again later.' });

@@ -173,6 +173,6 @@ const cryptoSlice = createSlice({
 });
 
 // Export the reducer to be added in the store
-export default cryptoSlice.reducer;
+export const cryptoReducer = cryptoSlice.reducer;
 
 export const { setCurrency } = cryptoSlice.actions;

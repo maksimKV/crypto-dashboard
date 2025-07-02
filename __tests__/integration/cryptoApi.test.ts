@@ -1,5 +1,5 @@
 import { createMocks } from 'node-mocks-http';
-import handler from '../../src/pages/api/cryptoApi';
+import { handler } from '../../src/pages/api/cryptoApi';
 import * as rateLimiter from '../../src/utils/rateLimiter';
 
 jest.mock('../../src/utils/rateLimiter');

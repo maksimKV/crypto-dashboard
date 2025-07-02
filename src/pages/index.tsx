@@ -58,7 +58,7 @@ function debounce<F extends (...args: any[]) => void>(func: F, wait: number) {
   };
 }
 
-export default function Home({ initialCoins = [] }: { initialCoins?: CoinData[] }): ReactElement {
+export function Home({ initialCoins = [] }: { initialCoins?: CoinData[] }): ReactElement {
   const dispatch = useDispatch<AppDispatch>();
   const coins = useSelector(selectCoins);
   const loadingCoins = useSelector(selectLoadingCoins);

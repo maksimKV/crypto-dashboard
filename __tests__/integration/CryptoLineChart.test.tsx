@@ -2,7 +2,7 @@ import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
-import cryptoReducer from '@/store/cryptoSlice';
+import { cryptoReducer } from '@/store/cryptoSlice';
 import { CryptoLineChart } from '@/components/CryptoLineChart';
 
 const defaultCryptoState = {
