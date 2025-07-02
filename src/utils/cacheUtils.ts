@@ -20,9 +20,19 @@ function hasMessage(error: unknown): error is ErrorWithMessage {
 }
 
 export function getErrorMessage(error: unknown, fallback = 'Unknown error'): string {
-  if (typeof error === 'string') return error;
+  if (typeof error === 'string') {
+    // Only return if it's a short, single-line string (not a stack trace)
+    if (error.length < 200 && !error.includes('\n') && !error.toLowerCase().includes('stack')) {
+      return error;
+    }
+    return fallback;
+  }
   if (hasMessage(error)) {
-    return error.message;
+    const msg = error.message;
+    if (typeof msg === 'string' && msg.length < 200 && !msg.includes('\n') && !msg.toLowerCase().includes('stack')) {
+      return msg;
+    }
+    return fallback;
   }
   return fallback;
 }
