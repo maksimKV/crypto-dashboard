@@ -9,7 +9,7 @@ interface CachedData<T> {
 }
 
 // Interface defining the shape of the Redux state for crypto data
-interface CryptoState {
+export interface CryptoState {
   // Cached coins list with timestamp
   coins: CachedData<CoinData[]> | null;
 

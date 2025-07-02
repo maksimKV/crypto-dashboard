@@ -39,7 +39,7 @@ describe('/api/cryptoApi endpoint', () => {
     expect(res._getStatusCode()).toBe(400);
     const data = res._getData();
     const parsed = typeof data === 'string' ? JSON.parse(data) : data;
-    expect(parsed).toMatchObject({ error: expect.any(String) });
+    expect(parsed).toMatchObject({ error: expect.stringContaining("") });
   });
 
   it('returns 400 for invalid coinId', async () => {
@@ -52,7 +52,7 @@ describe('/api/cryptoApi endpoint', () => {
     expect(res._getStatusCode()).toBe(400);
     const data = res._getData();
     const parsed = typeof data === 'string' ? JSON.parse(data) : data;
-    expect(parsed).toMatchObject({ error: expect.any(String) });
+    expect(parsed).toMatchObject({ error: expect.stringContaining("") });
   });
 
   it('returns 429 if rate limited', async () => {
@@ -65,6 +65,6 @@ describe('/api/cryptoApi endpoint', () => {
     expect(res._getStatusCode()).toBe(429);
     const data = res._getData();
     const parsed = typeof data === 'string' ? JSON.parse(data) : data;
-    expect(parsed).toMatchObject({ error: expect.any(String) });
+    expect(parsed).toMatchObject({ error: expect.stringContaining("") });
   });
 }); 

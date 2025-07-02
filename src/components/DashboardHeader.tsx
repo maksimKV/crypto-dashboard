@@ -1,9 +1,5 @@
 import React from 'react';
-
-interface Tab {
-  name: string;
-  key: string;
-}
+import type { Tab } from './Tabs';
 
 interface DashboardHeaderProps {
   title: string;

@@ -1,4 +1,5 @@
 import requestIp from 'request-ip';
+import type { NextApiRequest } from 'next';
 
 jest.mock('request-ip');
 
@@ -18,7 +19,7 @@ jest.mock('ioredis', () => {
 describe('rateLimit', () => {
   let now = 1000000;
   const mockGetClientIp = requestIp.getClientIp as jest.Mock;
-  const mockReq = {} as any;
+  const mockReq = {} as NextApiRequest;
 
   beforeEach(() => {
     // Reset mocks and time before each test to ensure isolation
@@ -119,7 +120,7 @@ describe('rateLimit', () => {
     const { rateLimit } = require('../../src/utils/rateLimiter');
     mockGetClientIp.mockReturnValue('5.5.5.5');
     const badReq = null;
-    await expect(rateLimit(badReq as any)).resolves.toBe(true);
+    await expect(rateLimit(badReq as unknown as NextApiRequest)).resolves.toBe(true);
   });
 
   it('handles missing REDIS_URL env variable', async () => {

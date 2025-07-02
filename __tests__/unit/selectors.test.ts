@@ -10,12 +10,13 @@ import {
     selectChartError,
     selectCurrency,
   } from '@/store/selectors';
+  import type { CryptoState } from '../../src/store/cryptoSlice';
   
   describe('crypto selectors', () => {
     // Sample mock state matching the expected RootState shape for crypto slice
-    const mockState = {
+    const mockState: { crypto: CryptoState } = {
       crypto: {
-        coins: { timestamp: 123, data: [{ id: 'bitcoin', name: 'Bitcoin' }] },
+        coins: { timestamp: 123, data: [{ id: 'bitcoin', name: 'Bitcoin', symbol: 'btc', image: '', current_price: 1, market_cap: 1, market_cap_rank: 1, total_volume: 1, high_24h: 1, low_24h: 1, price_change_24h: 1, price_change_percentage_24h: 1, circulating_supply: 1, total_supply: 1 }] },
         loadingCoins: true,
         error: 'Error fetching coins',
         topMarketCaps: { timestamp: 456, data: [{ id: 'ethereum', name: 'Ethereum' }] },
@@ -33,47 +34,47 @@ import {
     };
   
     it('should select the crypto slice state', () => {
-      expect(selectCryptoState(mockState as any)).toEqual(mockState.crypto);
+      expect(selectCryptoState(mockState)).toEqual(mockState.crypto);
     });
   
     it('should select coins data or empty array', () => {
-      expect(selectCoins(mockState as any)).toEqual(mockState.crypto.coins.data);
+      expect(selectCoins(mockState)).toEqual(mockState.crypto.coins.data);
       // When coins is null, fallback to empty array
-      expect(selectCoins({ crypto: { ...mockState.crypto, coins: null } } as any)).toEqual([]);
+      expect(selectCoins({ crypto: { ...mockState.crypto, coins: null } })).toEqual([]);
     });
   
     it('should select loadingCoins boolean', () => {
-      expect(selectLoadingCoins(mockState as any)).toBe(true);
+      expect(selectLoadingCoins(mockState)).toBe(true);
     });
   
     it('should select error message for coins', () => {
-      expect(selectErrorCoins(mockState as any)).toBe('Error fetching coins');
+      expect(selectErrorCoins(mockState)).toBe('Error fetching coins');
     });
   
     it('should select top market caps data or empty array', () => {
-      expect(selectTopMarketCaps(mockState as any)).toEqual(mockState.crypto.topMarketCaps.data);
+      expect(selectTopMarketCaps(mockState)).toEqual(mockState.crypto.topMarketCaps.data);
       // When topMarketCaps is null fallback to empty array
-      expect(selectTopMarketCaps({ crypto: { ...mockState.crypto, topMarketCaps: null } } as any)).toEqual([]);
+      expect(selectTopMarketCaps({ crypto: { ...mockState.crypto, topMarketCaps: null } })).toEqual([]);
     });
   
     it('should select loadingTopCaps boolean', () => {
-      expect(selectLoadingTopCaps(mockState as any)).toBe(false);
+      expect(selectLoadingTopCaps(mockState)).toBe(false);
     });
   
     it('should select market chart data for a specific coin or null', () => {
       const selector = selectMarketChartData('bitcoin');
-      expect(selector(mockState as any)).toEqual(mockState.crypto.marketChartData.bitcoin.data);
+      expect(selector(mockState)).toEqual(mockState.crypto.marketChartData.bitcoin.data);
       // When no data for coinId, fallback to null
       const emptyState = { crypto: { ...mockState.crypto, marketChartData: {} } };
-      expect(selector(emptyState as any)).toBeNull();
+      expect(selector(emptyState)).toBeNull();
     });
   
     it('should select loadingChart boolean', () => {
-      expect(selectLoadingChart(mockState as any)).toBe(true);
+      expect(selectLoadingChart(mockState)).toBe(true);
     });
   
     it('should select chart error message', () => {
-      expect(selectChartError(mockState as any)).toBe('Error fetching chart');
+      expect(selectChartError(mockState)).toBe('Error fetching chart');
     });
   
     it('selectCurrency returns the correct currency', () => {

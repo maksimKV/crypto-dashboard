@@ -1,6 +1,6 @@
 import React from 'react';
 import { render, screen, waitFor, fireEvent } from '@testing-library/react';
-import { Home } from '@/pages/index';
+import Home from '@/pages/index';
 import * as cryptoApi from '@/pages/api/cryptoApi';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';

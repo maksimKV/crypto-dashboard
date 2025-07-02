@@ -1,6 +1,6 @@
 import React from 'react';
 
-interface Tab {
+export interface Tab {
   name: string;
   key: string;
 }

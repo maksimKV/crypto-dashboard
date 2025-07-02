@@ -23,7 +23,7 @@ describe('CryptoLineChart (unit)', () => {
   });
 
   it('renders loading state as no data', () => {
-    mockUseSelector.mockImplementation((selector: any) => {
+    mockUseSelector.mockImplementation((selector: unknown) => {
       if (selector.name === 'selectLoadingChart') return true;
       if (selector.name === 'selectChartError') return null;
       if (selector.name === 'selectMarketChartData') return null;
@@ -35,7 +35,7 @@ describe('CryptoLineChart (unit)', () => {
   });
 
   it('renders error state as no data', () => {
-    mockUseSelector.mockImplementation((selector: any) => {
+    mockUseSelector.mockImplementation((selector: unknown) => {
       if (selector.name === 'selectLoadingChart') return false;
       if (selector.name === 'selectChartError') return 'API error';
       if (selector.name === 'selectMarketChartData') return null;
@@ -47,7 +47,7 @@ describe('CryptoLineChart (unit)', () => {
   });
 
   it('renders no data state', () => {
-    mockUseSelector.mockImplementation((selector: any) => {
+    mockUseSelector.mockImplementation((selector: unknown) => {
       if (selector.name === 'selectLoadingChart') return false;
       if (selector.name === 'selectChartError') return null;
       if (selector.name === 'selectMarketChartData') return null;
@@ -60,7 +60,7 @@ describe('CryptoLineChart (unit)', () => {
 
   it('renders the line chart with valid data', () => {
     const coinId = 'bitcoin';
-    mockUseSelector.mockImplementation((selector: any) => {
+    mockUseSelector.mockImplementation((selector: unknown) => {
       if (selector.name === 'selectLoadingChart') return false;
       if (selector.name === 'selectChartError') return null;
       if (selector.name === 'selectCurrency') return 'usd';
@@ -89,7 +89,7 @@ describe('CryptoLineChart (unit)', () => {
 
   it('handles malformed data gracefully', () => {
     // Should not throw or break if data is malformed
-    mockUseSelector.mockImplementation((selector: any) => {
+    mockUseSelector.mockImplementation((selector: unknown) => {
       if (selector.name === 'selectLoadingChart') return false;
       if (selector.name === 'selectChartError') return null;
       if (selector.name === 'selectMarketChartData') return { prices: null, market_caps: null, total_volumes: null };
