@@ -5,6 +5,7 @@ jest.mock('react-chartjs-2', () => ({
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { CryptoRadarChart } from '@/components/CryptoRadarChart';
+import { RootState } from '@/store';
 
 // Mock react-redux hooks
 type UnwrappablePromise = Promise<void> & { unwrap: () => Promise<void> };
@@ -27,12 +28,12 @@ describe('CryptoRadarChart (unit)', () => {
   });
 
   it('renders loading state as no data', () => {
-    mockUseSelector.mockImplementation((selector: unknown) => {
-      const s = selector as any;
-      if (s.name === 'selectLoadingTopCaps') return true;
-      if (s.name === 'selectTopCapsError') return null;
-      if (s.name === 'selectTopMarketCaps') return null;
-      if (s.name === 'selectCurrency') return 'usd';
+    mockUseSelector.mockImplementation((selector: (state: RootState) => unknown) => {
+      const fn = selector as Function;
+      if ('name' in fn && fn.name === 'selectLoadingTopCaps') return true;
+      if ('name' in fn && fn.name === 'selectTopCapsError') return null;
+      if ('name' in fn && fn.name === 'selectTopMarketCaps') return null;
+      if ('name' in fn && fn.name === 'selectCurrency') return 'usd';
       return undefined;
     });
     render(<CryptoRadarChart />);
@@ -40,12 +41,12 @@ describe('CryptoRadarChart (unit)', () => {
   });
 
   it('renders error state as no data', () => {
-    mockUseSelector.mockImplementation((selector: unknown) => {
-      const s = selector as any;
-      if (s.name === 'selectLoadingTopCaps') return false;
-      if (s.name === 'selectTopCapsError') return 'API error';
-      if (s.name === 'selectTopMarketCaps') return null;
-      if (s.name === 'selectCurrency') return 'usd';
+    mockUseSelector.mockImplementation((selector: (state: RootState) => unknown) => {
+      const fn = selector as Function;
+      if ('name' in fn && fn.name === 'selectLoadingTopCaps') return false;
+      if ('name' in fn && fn.name === 'selectTopCapsError') return 'API error';
+      if ('name' in fn && fn.name === 'selectTopMarketCaps') return null;
+      if ('name' in fn && fn.name === 'selectCurrency') return 'usd';
       return undefined;
     });
     render(<CryptoRadarChart />);
@@ -53,12 +54,12 @@ describe('CryptoRadarChart (unit)', () => {
   });
 
   it('renders no data state', () => {
-    mockUseSelector.mockImplementation((selector: unknown) => {
-      const s = selector as any;
-      if (s.name === 'selectLoadingTopCaps') return false;
-      if (s.name === 'selectTopCapsError') return null;
-      if (s.name === 'selectTopMarketCaps') return { length: 0 };
-      if (s.name === 'selectCurrency') return 'usd';
+    mockUseSelector.mockImplementation((selector: (state: RootState) => unknown) => {
+      const fn = selector as Function;
+      if ('name' in fn && fn.name === 'selectLoadingTopCaps') return false;
+      if ('name' in fn && fn.name === 'selectTopCapsError') return null;
+      if ('name' in fn && fn.name === 'selectTopMarketCaps') return { length: 0 };
+      if ('name' in fn && fn.name === 'selectCurrency') return 'usd';
       return undefined;
     });
     render(<CryptoRadarChart />);
@@ -66,12 +67,12 @@ describe('CryptoRadarChart (unit)', () => {
   });
 
   it('renders the radar chart with valid data', () => {
-    mockUseSelector.mockImplementation((selector: unknown) => {
-      const s = selector as any;
-      if (s.name === 'selectLoadingTopCaps') return false;
-      if (s.name === 'selectTopCapsError') return null;
-      if (s.name === 'selectCurrency') return 'usd';
-      if (typeof s === 'function' && s.name === 'memoized') {
+    mockUseSelector.mockImplementation((selector: (state: RootState) => unknown) => {
+      const fn = selector as Function;
+      if ('name' in fn && fn.name === 'selectLoadingTopCaps') return false;
+      if ('name' in fn && fn.name === 'selectTopCapsError') return null;
+      if ('name' in fn && fn.name === 'selectCurrency') return 'usd';
+      if (typeof fn === 'function' && 'name' in fn && fn.name === 'memoized') {
         const mockState = {
           crypto: {
             topMarketCaps: {
@@ -85,7 +86,7 @@ describe('CryptoRadarChart (unit)', () => {
             },
           },
         };
-        return s(mockState);
+        return fn(mockState);
       }
       return undefined;
     });
@@ -95,12 +96,12 @@ describe('CryptoRadarChart (unit)', () => {
 
   it('handles malformed data gracefully', () => {
     // Should not throw or break if data is malformed
-    mockUseSelector.mockImplementation((selector: unknown) => {
-      const s = selector as any;
-      if (s.name === 'selectLoadingTopCaps') return false;
-      if (s.name === 'selectTopCapsError') return null;
-      if (s.name === 'selectTopMarketCaps') return null;
-      if (s.name === 'selectCurrency') return 'usd';
+    mockUseSelector.mockImplementation((selector: (state: RootState) => unknown) => {
+      const fn = selector as Function;
+      if ('name' in fn && fn.name === 'selectLoadingTopCaps') return false;
+      if ('name' in fn && fn.name === 'selectTopCapsError') return null;
+      if ('name' in fn && fn.name === 'selectTopMarketCaps') return null;
+      if ('name' in fn && fn.name === 'selectCurrency') return 'usd';
       return undefined;
     });
     render(<CryptoRadarChart />);
