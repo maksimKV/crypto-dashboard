@@ -68,3 +68,28 @@ describe('fetchCryptoData input validation', () => {
     await expect(fetchApiData('/api/cryptoApi?currency=usd', '   ')).rejects.toThrow('Invalid error message provided to fetchApiData');
   });
 });
+
+describe('isValidUrl', () => {
+  const { isValidUrl } = jest.requireActual('@/utils/fetchData');
+  it('allows safe relative URLs', () => {
+    expect(isValidUrl('/api/cryptoApi')).toBe(true);
+    expect(isValidUrl('/foo/bar')).toBe(true);
+  });
+  it('blocks protocol-relative URLs', () => {
+    expect(isValidUrl('//malicious.com')).toBe(false);
+  });
+  it('allows http and https URLs', () => {
+    expect(isValidUrl('http://example.com')).toBe(true);
+    expect(isValidUrl('https://example.com')).toBe(true);
+  });
+  it('blocks javascript, data, vbscript, and file URLs', () => {
+    expect(isValidUrl('javascript:alert(1)')).toBe(false);
+    expect(isValidUrl('data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==')).toBe(false);
+    expect(isValidUrl('vbscript:msgbox("XSS")')).toBe(false);
+    expect(isValidUrl('file:///etc/passwd')).toBe(false);
+  });
+  it('blocks malformed URLs', () => {
+    expect(isValidUrl('not-a-url')).toBe(false);
+    expect(isValidUrl('ftp://malicious.com')).toBe(false);
+  });
+});

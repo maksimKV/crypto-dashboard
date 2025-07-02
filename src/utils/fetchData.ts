@@ -1,10 +1,12 @@
 import { CoinData } from '@/types/chartTypes';
 
-// Helper to validate URLs (allow only http(s) and relative URLs)
-function isValidUrl(url: string): boolean {
+// Helper to validate URLs (allow only http(s) and safe relative URLs)
+export function isValidUrl(url: string): boolean {
   try {
-    // Allow relative URLs (for internal API calls)
-    if (url.startsWith('/')) return true;
+    // Disallow dangerous protocols
+    if (/^(javascript:|data:|vbscript:|file:)/i.test(url)) return false;
+    // Allow only safe relative URLs (must start with / and not //)
+    if (url.startsWith('/') && !url.startsWith('//')) return true;
     const parsed = new URL(url);
     return parsed.protocol === 'http:' || parsed.protocol === 'https:';
   } catch {
