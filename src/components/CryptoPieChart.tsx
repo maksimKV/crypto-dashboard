@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pie } from 'react-chartjs-2';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch } from '@/store';
@@ -24,16 +24,23 @@ function CryptoPieChartComponent(): React.ReactElement {
   const topCoins = useSelector(selectTopMarketCaps) || [];
   const loading = useSelector(selectLoadingTopCaps);
   const error = useSelector(selectTopCapsError);
+  const [localError, setLocalError] = useState<string | null>(null);
 
   // Fetch top market caps if not loaded
   useEffect(() => {
     if (topCoins.length === 0) {
-      dispatch(fetchTopMarketCaps());
+      dispatch(fetchTopMarketCaps()).unwrap().catch((err: unknown) => {
+        if (typeof err === 'object' && err !== null && 'message' in err && typeof (err as { message?: unknown }).message === 'string') {
+          setLocalError((err as { message: string }).message);
+        } else {
+          setLocalError('An unexpected error occurred while fetching top market caps.');
+        }
+      });
     }
   }, [dispatch, topCoins.length]);
 
   if (loading) return <p>Loading...</p>;
-  if (error) return <p className="text-red-600">Error: {error}</p>;
+  if (error || localError) return <p className="text-red-600">Error: {error || localError}</p>;
   if (!topCoins.length) return <p>No data to display.</p>;
 
   // Calculate total market cap for percentage calculation in tooltip

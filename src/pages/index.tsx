@@ -78,11 +78,11 @@ export default function Home({ initialCoins = [] }: { initialCoins?: CoinData[] 
 
   // Memoized debounced dispatchers
   const debouncedFetchCoins = useMemo(() => debounce(() => {
-    dispatch(fetchCoins()).catch(handleApiError);
+    dispatch(fetchCoins()).unwrap().catch(handleApiError);
   }, 300), [dispatch]);
 
   const debouncedFetchTopMarketCaps = useMemo(() => debounce(() => {
-    dispatch(fetchTopMarketCaps()).catch(handleApiError);
+    dispatch(fetchTopMarketCaps()).unwrap().catch(handleApiError);
   }, 300), [dispatch]);
 
   function handleApiError(error: unknown) {

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Bar } from 'react-chartjs-2';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch } from '@/store';
@@ -33,18 +33,25 @@ function CryptoBarChartComponent({ coinId }: CryptoChartProps): React.ReactEleme
   const data = useSelector(selectMarketChartData(coinId));
   const loading = useSelector(selectLoadingChart);
   const error = useSelector(selectChartError);
+  const [localError, setLocalError] = useState<string | null>(null);
 
   // Fetch market chart data if needed
   useEffect(() => {
     if (!coinId || data) return;
-    dispatch(fetchMarketChart({ coinId }));
+    dispatch(fetchMarketChart({ coinId })).unwrap().catch((err: unknown) => {
+      if (typeof err === 'object' && err !== null && 'message' in err && typeof (err as { message?: unknown }).message === 'string') {
+        setLocalError((err as { message: string }).message);
+      } else {
+        setLocalError('An unexpected error occurred while fetching chart data.');
+      }
+    });
   }, [dispatch, coinId, data, currency]);
 
   // Memoize data transformation for performance
   const chartData = useMemo(() => (data ? transformBarData(data, coinId) : null), [data, coinId]);
 
   if (loading) return <p>Loading...</p>;
-  if (error) return <p className="text-red-600">Error: {error}</p>;
+  if (error || localError) return <p className="text-red-600">Error: {error || localError}</p>;
   if (!chartData) return <p>No data to display.</p>;
 
   // Chart options with tooltip customization and axis labels for better UX
