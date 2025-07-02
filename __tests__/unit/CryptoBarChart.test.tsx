@@ -61,7 +61,6 @@ describe('CryptoBarChart (unit)', () => {
   it('renders the bar chart with valid data', () => {
     const coinId = 'bitcoin';
     mockUseSelector.mockImplementation((selector: any) => {
-      console.log('mockUseSelector called with:', selector, 'name:', selector.name);
       if (selector.name === 'selectLoadingChart') return false;
       if (selector.name === 'selectChartError') return null;
       if (selector.name === 'selectCurrency') return 'usd';
