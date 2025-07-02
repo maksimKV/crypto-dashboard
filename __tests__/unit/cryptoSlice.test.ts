@@ -146,4 +146,12 @@ import reducer, {
         expect(state.topCapsError).toBe('Failed to fetch top caps');
       });
     });
+  });
+
+  describe('setCurrency reducer', () => {
+    it('should update the currency in state', () => {
+      const action = { type: 'crypto/setCurrency', payload: 'eur' };
+      const state = reducer(undefined, action);
+      expect(state.currency).toBe('eur');
+    });
   });  

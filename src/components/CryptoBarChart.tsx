@@ -13,6 +13,7 @@ import {
   Tooltip,
   Legend,
   ChartOptions,
+  Filler,
 } from 'chart.js';
 
 import { transformBarData } from '@/utils/chartHelpers';
@@ -20,7 +21,7 @@ import { selectMarketChartData, selectLoadingChart, selectChartError, selectCurr
 import { getCurrencyLabel } from '@/utils/cacheUtils';
 
 // Register necessary Chart.js components for bar charts
-ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend, Filler);
 
 /**
  * CryptoBarChartComponent fetches and displays the trading volume

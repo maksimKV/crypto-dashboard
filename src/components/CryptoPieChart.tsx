@@ -9,13 +9,14 @@ import {
   Tooltip,
   Legend,
   ChartOptions,
+  Filler,
 } from 'chart.js';
 
 import { selectTopMarketCaps, selectLoadingTopCaps, selectTopCapsError, selectCurrency } from '@/store/selectors';
 import { getCurrencyLabel } from '@/utils/cacheUtils';
 
 // Register necessary chart.js components for Pie chart
-ChartJS.register(ArcElement, Tooltip, Legend);
+ChartJS.register(ArcElement, Tooltip, Legend, Filler);
 
 function CryptoPieChartComponent(): React.ReactElement {
   const dispatch = useDispatch<AppDispatch>();

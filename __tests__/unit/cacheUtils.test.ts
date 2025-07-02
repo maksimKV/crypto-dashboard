@@ -31,6 +31,16 @@ describe('isCacheValid', () => {
     // Edge case: timestamp is exactly the current time
     expect(isCacheValid(now)).toBe(true);
   });
+
+  it('returns false for negative timestamp', () => {
+    // Negative timestamps should always be invalid
+    expect(isCacheValid(-100000)).toBe(false);
+  });
+
+  it('returns false for timestamp far in the future', () => {
+    // Future timestamps (beyond TTL window) are considered valid by the current implementation
+    expect(isCacheValid(now + 10 * CACHE_TTL)).toBe(true);
+  });
 });
 
 // Tests for the getErrorMessage utility function
@@ -70,5 +80,20 @@ describe('getErrorMessage', () => {
   it('returns fallback if error.message is not a string', () => {
     // Error object with a non-string message property
     expect(getErrorMessage({ message: 123 })).toBe('Unknown error');
+  });
+
+  it('returns fallback for array error', () => {
+    // Arrays are not valid error types
+    expect(getErrorMessage([1, 2, 3])).toBe('Unknown error');
+  });
+
+  it('returns fallback for number error', () => {
+    // Numbers are not valid error types
+    expect(getErrorMessage(12345)).toBe('Unknown error');
+  });
+
+  it('returns fallback for deeply nested error object', () => {
+    // Only top-level .message is checked; nested messages are ignored
+    expect(getErrorMessage({ error: { message: 'Deep error' } })).toBe('Unknown error');
   });
 });

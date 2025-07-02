@@ -14,6 +14,8 @@ import {
   Tooltip,
   Legend,
   ChartOptions,
+  Chart,
+  Filler,
 } from 'chart.js';
 
 import { transformLineData } from '@/utils/chartHelpers';
@@ -21,7 +23,7 @@ import { selectMarketChartData, selectLoadingChart, selectChartError, selectCurr
 import { getCurrencyLabel } from '@/utils/cacheUtils';
 
 // Register necessary Chart.js components for line charts
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
 
 /**
  * CryptoLineChartComponent fetches and displays the price history

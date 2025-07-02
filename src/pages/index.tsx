@@ -78,7 +78,9 @@ export default function Home({ initialCoins = [] }: { initialCoins?: CoinData[] 
   const totalPages = Math.ceil(coins.length / itemsPerPage);
 
   // Debounced dispatchers
-  const debouncedFetchCoins = debounce(() => dispatch(fetchCoins()).catch(handleApiError), 300);
+  const debouncedFetchCoins = debounce(() => {
+    dispatch(fetchCoins()).catch(handleApiError);
+  }, 300);
   const debouncedFetchMarketChart = debounce((coinId: string) => dispatch(fetchMarketChart({ coinId })).catch(handleApiError), 300);
   const debouncedFetchTopMarketCaps = debounce(() => dispatch(fetchTopMarketCaps()).catch(handleApiError), 300);
 

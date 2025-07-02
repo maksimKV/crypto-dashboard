@@ -3,9 +3,11 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import Home from '@/pages/index';
 import * as cryptoApi from '@/pages/api/cryptoApi';
 import { Provider } from 'react-redux';
-import { store } from '@/store';
+import { configureStore } from '@reduxjs/toolkit';
+import cryptoReducer from '@/store/cryptoSlice';
 import { CurrencySelector } from '@/components/CoinSelector';
 import { setCurrency } from '@/store/cryptoSlice';
+import { CoinData } from '@/types/chartTypes';
 
 jest.mock('@/pages/api/cryptoApi');
 
@@ -68,6 +70,7 @@ describe('Home Page Integration', () => {
     (cryptoApi.getMarketChart as jest.Mock).mockResolvedValue(mockMarketChartData);
     (cryptoApi.getTopMarketCaps as jest.Mock).mockResolvedValue(mockTopMarketCaps);
 
+    // Mock fetch to simulate API responses for different endpoints
     jest.spyOn(global, 'fetch').mockImplementation((url) => {
       if (typeof url === 'string' && url.includes('/api/cryptoApi')) {
         if (url.includes('topMarketCaps=true')) {
@@ -95,7 +98,40 @@ describe('Home Page Integration', () => {
     jest.restoreAllMocks();
   });
 
+  function createTestStore(preloadedState = {}) {
+    return configureStore({
+      reducer: { crypto: cryptoReducer },
+      preloadedState,
+    });
+  }
+
   function renderHome() {
+    const store = createTestStore();
+    return render(
+      <Provider store={store}>
+        <Home />
+      </Provider>
+    );
+  }
+
+  function renderWithCoins(mockCoins: CoinData[]) {
+    const store = configureStore({
+      reducer: { crypto: cryptoReducer },
+      preloadedState: {
+        crypto: {
+          coins: { timestamp: Date.now(), data: mockCoins },
+          marketChartData: {},
+          topMarketCaps: null,
+          loadingCoins: false,
+          loadingChart: false,
+          loadingTopCaps: false,
+          error: null,
+          chartError: null,
+          topCapsError: null,
+          currency: 'usd',
+        }
+      }
+    });
     return render(
       <Provider store={store}>
         <Home />
@@ -147,5 +183,175 @@ describe('Home Page Integration', () => {
     expect(select).toHaveValue('usd');
     fireEvent.change(select, { target: { value: 'eur' } });
     expect(mockDispatch).toHaveBeenCalledWith('eur');
+  });
+
+  it('paginates coins and disables buttons at boundaries', async () => {
+    // Create 40 mock coins for two pages
+    const manyCoins = Array.from({ length: 40 }, (_, i) => ({
+      id: `coin${i + 1}`,
+      symbol: `c${i + 1}`,
+      name: `Coin ${i + 1}`,
+      image: '',
+      current_price: 100 + i,
+      market_cap: 1000 + i,
+      market_cap_rank: i + 1,
+      total_volume: 10000 + i,
+      high_24h: 200 + i,
+      low_24h: 50 + i,
+      price_change_24h: 1 + i,
+      price_change_percentage_24h: 0.1 * i,
+      circulating_supply: 1000000 + i,
+      total_supply: 2000000 + i,
+    }));
+    renderWithCoins(manyCoins);
+    // Wait for first page to load
+    await waitFor(() => {
+      const options = screen.getAllByRole('option');
+      expect(options.some(opt => opt.textContent?.includes('Coin 1'))).toBe(true);
+    });
+    // Should show Coin 1 and Coin 20, but not Coin 21 (pagination boundary)
+    const options = screen.getAllByRole('option');
+    expect(options.some(opt => opt.textContent?.includes('Coin 1'))).toBe(true);
+    expect(options.some(opt => opt.textContent?.includes('Coin 20'))).toBe(true);
+    expect(options.some(opt => opt.textContent?.includes('Coin 21'))).toBe(false);
+    // Prev button should be disabled on first page
+    const prevBtn = screen.getByRole('button', { name: /previous/i });
+    expect(prevBtn).toBeDisabled();
+    // Next button should be enabled
+    const nextBtn = screen.getByRole('button', { name: /next/i });
+    expect(nextBtn).not.toBeDisabled();
+    // Go to next page
+    nextBtn.click();
+    await waitFor(() => {
+      const options = screen.getAllByRole('option');
+      expect(options.some(opt => opt.textContent?.includes('Coin 21'))).toBe(true);
+    });
+    const options2 = screen.getAllByRole('option');
+    expect(options2.some(opt => opt.textContent?.includes('Coin 40'))).toBe(true);
+    expect(options2.some(opt => opt.textContent?.includes('Coin 1'))).toBe(false);
+    // Next button should now be disabled on last page
+    expect(nextBtn).toBeDisabled();
+    // Prev button should be enabled
+    expect(prevBtn).not.toBeDisabled();
+    // Go back to previous page
+    prevBtn.click();
+    await waitFor(() => {
+      const options = screen.getAllByRole('option');
+      expect(options.some(opt => opt.textContent?.includes('Coin 1'))).toBe(true);
+    });
+    const options3 = screen.getAllByRole('option');
+    expect(options3.some(opt => opt.textContent?.includes('Coin 20'))).toBe(true);
+  });
+
+  it('full user flow: landing, select coin, change currency, switch charts, paginate', async () => {
+    // Create 40 mock coins for two pages
+    const manyCoins = Array.from({ length: 40 }, (_, i) => ({
+      id: `coin${i + 1}`,
+      symbol: `c${i + 1}`,
+      name: `Coin ${i + 1}`,
+      image: '',
+      current_price: 100 + i,
+      market_cap: 1000 + i,
+      market_cap_rank: i + 1,
+      total_volume: 10000 + i,
+      high_24h: 200 + i,
+      low_24h: 50 + i,
+      price_change_24h: 1 + i,
+      price_change_percentage_24h: 0.1 * i,
+      circulating_supply: 1000000 + i,
+      total_supply: 2000000 + i,
+    }));
+    renderWithCoins(manyCoins);
+    // Wait for first page to load
+    await waitFor(() => {
+      const options = screen.getAllByRole('option');
+      expect(options.some(opt => opt.textContent?.includes('Coin 1'))).toBe(true);
+    });
+    // Select a coin
+    const selects = screen.getAllByRole('combobox');
+    const coinSelect = selects[1];
+    fireEvent.change(coinSelect, { target: { value: 'coin5' } });
+    expect((coinSelect as HTMLSelectElement).value).toBe('coin5');
+    // Change currency
+    const currencySelect = selects[0];
+    fireEvent.change(currencySelect, { target: { value: 'eur' } });
+    expect((currencySelect as HTMLSelectElement).value).toBe('eur');
+    // Switch chart types
+    fireEvent.click(screen.getByText('Bar Chart'));
+    fireEvent.click(screen.getByText('Pie Chart'));
+    fireEvent.click(screen.getByText('Radar Chart'));
+    fireEvent.click(screen.getByText('Line Chart'));
+    // Paginate to next page
+    const nextBtn = screen.getByRole('button', { name: /next/i });
+    nextBtn.click();
+    await waitFor(() => {
+      const options = screen.getAllByRole('option');
+      expect(options.some(opt => opt.textContent?.includes('Coin 21'))).toBe(true);
+    });
+    // Paginate back to previous page
+    const prevBtn = screen.getByRole('button', { name: /previous/i });
+    prevBtn.click();
+    await waitFor(() => {
+      const options = screen.getAllByRole('option');
+      expect(options.some(opt => opt.textContent?.includes('Coin 1'))).toBe(true);
+    });
+  });
+
+  it('shows user-friendly error on API/network failure and recovers', async () => {
+    jest.spyOn(global, 'fetch').mockImplementation((url) => {
+      if (typeof url === 'string' && url.includes('/api/cryptoApi')) {
+        return Promise.reject(new Error('Network error'));
+      }
+      return Promise.resolve(new Response(JSON.stringify({})));
+    });
+    renderHome();
+    await waitFor(
+      () => expect(screen.getByText((content) => content.includes('Network error'))).toBeInTheDocument(),
+      { timeout: 2000 }
+    );
+    // Simulate retry with successful response
+    (global.fetch as jest.Mock).mockImplementation((url) => {
+      if (typeof url === 'string' && url.includes('/api/cryptoApi')) {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify([
+              { id: 'bitcoin', symbol: 'btc', name: 'Bitcoin', image: '', current_price: 50000, market_cap: 1000000000, market_cap_rank: 1, total_volume: 10000000, high_24h: 51000, low_24h: 49000, price_change_24h: 1000, price_change_percentage_24h: 2, circulating_supply: 18000000, total_supply: 21000000 }
+            ])
+          )
+        );
+      }
+      return Promise.resolve(new Response(JSON.stringify({})));
+    });
+    renderHome();
+    await waitFor(() => expect(screen.getByText('Bitcoin')).toBeInTheDocument());
+  });
+
+  it('shows rate limit error (429) and recovers after retry', async () => {
+    jest.spyOn(global, 'fetch').mockImplementation((url) => {
+      if (typeof url === 'string' && url.includes('/api/cryptoApi')) {
+        return Promise.reject(new Error('429'));
+      }
+      return Promise.resolve(new Response(JSON.stringify({})));
+    });
+    renderHome();
+    await waitFor(
+      () => expect(screen.getByText((content) => content.includes('Error: 429'))).toBeInTheDocument(),
+      { timeout: 2000 }
+    );
+    // Simulate retry with successful response
+    (global.fetch as jest.Mock).mockImplementation((url) => {
+      if (typeof url === 'string' && url.includes('/api/cryptoApi')) {
+        return Promise.resolve(
+          new Response(
+            JSON.stringify([
+              { id: 'bitcoin', symbol: 'btc', name: 'Bitcoin', image: '', current_price: 50000, market_cap: 1000000000, market_cap_rank: 1, total_volume: 10000000, high_24h: 51000, low_24h: 49000, price_change_24h: 1000, price_change_percentage_24h: 2, circulating_supply: 18000000, total_supply: 21000000 }
+            ])
+          )
+        );
+      }
+      return Promise.resolve(new Response(JSON.stringify({})));
+    });
+    renderHome();
+    await waitFor(() => expect(screen.getByText('Bitcoin')).toBeInTheDocument());
   });
 });
