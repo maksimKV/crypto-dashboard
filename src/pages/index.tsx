@@ -90,11 +90,22 @@ export function Home({ initialCoins = [] }: { initialCoins?: CoinData[] }): Reac
     dispatch(fetchTopMarketCaps()).catch(handleApiError);
   }, 300), [dispatch]);
 
-  function handleApiError(error: any) {
-    if (error && error.message && error.message.includes('429')) {
+  function handleApiError(error: unknown) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'message' in error &&
+      typeof (error as { message?: unknown }).message === 'string' &&
+      (error as { message: string }).message.includes('429')
+    ) {
       setApiError('You are making requests too quickly. Please wait a moment and try again.');
-    } else if (error && error.message) {
-      setApiError(error.message);
+    } else if (
+      typeof error === 'object' &&
+      error !== null &&
+      'message' in error &&
+      typeof (error as { message?: unknown }).message === 'string'
+    ) {
+      setApiError((error as { message: string }).message);
     } else {
       setApiError('An unexpected error occurred.');
     }
