@@ -28,3 +28,4 @@ yarn-error.log*
 
 # Optional: coverage reports
 coverage/
+.env.production

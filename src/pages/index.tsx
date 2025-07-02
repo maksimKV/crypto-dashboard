@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, Suspense, ReactElement, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch } from '@/store';
-import { fetchCoins, fetchMarketChart, fetchTopMarketCaps, setCurrency } from '@/store/cryptoSlice';
+import { fetchCoins, fetchTopMarketCaps, setCurrency } from '@/store/cryptoSlice';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import {
   selectCoins,
@@ -11,7 +11,6 @@ import {
   selectLoadingTopCaps,
   selectCurrency,
 } from '@/store/selectors';
-import { Tabs } from '@/components/Tabs';
 import { CoinSelector, CurrencySelector } from '@/components/CoinSelector';
 import { fetchCryptoData } from '@/utils/fetchData';
 import { CoinData } from '@/types/chartTypes';
@@ -49,8 +48,8 @@ const tabs = [
   { name: 'Radar Chart', key: 'radar' },
 ];
 
-// Debounce utility
-function debounce<F extends (...args: any[]) => void>(func: F, wait: number) {
+// Update debounce utility to avoid 'any' type
+function debounce<F extends (...args: unknown[]) => void>(func: F, wait: number) {
   let timeout: NodeJS.Timeout;
   return (...args: Parameters<F>) => {
     clearTimeout(timeout);
@@ -58,7 +57,7 @@ function debounce<F extends (...args: any[]) => void>(func: F, wait: number) {
   };
 }
 
-export function Home({ initialCoins = [] }: { initialCoins?: CoinData[] }): ReactElement {
+export default function Home({ initialCoins = [] }: { initialCoins?: CoinData[] }): ReactElement {
   const dispatch = useDispatch<AppDispatch>();
   const coins = useSelector(selectCoins);
   const loadingCoins = useSelector(selectLoadingCoins);
@@ -80,10 +79,6 @@ export function Home({ initialCoins = [] }: { initialCoins?: CoinData[] }): Reac
   // Memoized debounced dispatchers
   const debouncedFetchCoins = useMemo(() => debounce(() => {
     dispatch(fetchCoins()).catch(handleApiError);
-  }, 300), [dispatch]);
-
-  const debouncedFetchMarketChart = useMemo(() => debounce((coinId: string) => {
-    dispatch(fetchMarketChart({ coinId })).catch(handleApiError);
   }, 300), [dispatch]);
 
   const debouncedFetchTopMarketCaps = useMemo(() => debounce(() => {
@@ -124,13 +119,13 @@ export function Home({ initialCoins = [] }: { initialCoins?: CoinData[] }): Reac
     } else if (!selectedCoin && coins.length > 0) {
       setSelectedCoin(coins[0].id);
     }
-  }, [coins, selectedCoin, dispatch, currency, initialCoins.length]);
+  }, [coins, selectedCoin, dispatch, currency, initialCoins.length, debouncedFetchCoins]);
 
   useEffect(() => {
     if (activeTab === 'radar' && topMarketCaps.length === 0 && !loadingTopCaps) {
       debouncedFetchTopMarketCaps();
     }
-  }, [activeTab, topMarketCaps.length, loadingTopCaps, dispatch, currency]);
+  }, [activeTab, topMarketCaps.length, loadingTopCaps, dispatch, currency, debouncedFetchTopMarketCaps]);
 
   useEffect(() => {
     function handleResize() {

@@ -69,8 +69,11 @@ export const fetchCoins = createAsyncThunk('crypto/fetchCoins', async (_, { getS
       throw new Error(msg);
     }
     return await res.json();
-  } catch (error: any) {
-    throw new Error(error?.message || 'An unexpected error occurred while fetching coins.');
+  } catch (error: unknown) {
+    if (typeof error === 'object' && error !== null && 'message' in error && typeof (error as { message?: unknown }).message === 'string') {
+      throw new Error((error as { message: string }).message);
+    }
+    throw new Error('An unexpected error occurred while fetching coins.');
   }
 });
 
@@ -93,8 +96,11 @@ export const fetchMarketChart = createAsyncThunk(
       }
       const data = await res.json();
       return { coinId, data };
-    } catch (error: any) {
-      throw new Error(error?.message || 'An unexpected error occurred while fetching market chart.');
+    } catch (error: unknown) {
+      if (typeof error === 'object' && error !== null && 'message' in error && typeof (error as { message?: unknown }).message === 'string') {
+        throw new Error((error as { message: string }).message);
+      }
+      throw new Error('An unexpected error occurred while fetching market chart.');
     }
   }
 );
@@ -116,8 +122,11 @@ export const fetchTopMarketCaps = createAsyncThunk(
         throw new Error(msg);
       }
       return await res.json();
-    } catch (error: any) {
-      throw new Error(error?.message || 'An unexpected error occurred while fetching top market caps.');
+    } catch (error: unknown) {
+      if (typeof error === 'object' && error !== null && 'message' in error && typeof (error as { message?: unknown }).message === 'string') {
+        throw new Error((error as { message: string }).message);
+      }
+      throw new Error('An unexpected error occurred while fetching top market caps.');
     }
   }
 );

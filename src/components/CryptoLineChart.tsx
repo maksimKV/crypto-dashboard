@@ -14,7 +14,6 @@ import {
   Tooltip,
   Legend,
   ChartOptions,
-  Chart,
   Filler,
 } from 'chart.js';
 
