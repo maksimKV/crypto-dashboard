@@ -41,7 +41,7 @@ async function fetchWithCache<T extends object>(url: string): Promise<T> {
   if (cached !== undefined) return cached as T;
   const res = await fetch(url, {
     headers: {
-      'User-Agent': 'crypto-dashboard/1.0 (your-email@example.com)',
+      'User-Agent': 'crypto-dashboard/1.0',
       'Accept': 'application/json',
     },
   });
