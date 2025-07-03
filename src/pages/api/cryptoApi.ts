@@ -18,8 +18,13 @@ const NODE_ENV = parsedEnv.success ? parsedEnv.data.NODE_ENV : undefined;
 // Use environment variable for CoinGecko API base URL, fallback to default if not set
 const BASE_URL = COINGECKO_API_BASE_URL || 'https://api.coingecko.com/api/v3';
 
+// Add a longer TTL for top market caps (1 hour)
+const TOP_MARKET_CAPS_TTL = 60 * 60 * 1000; // 1 hour in ms
+
 // LRU cache for API responses
 const apiCache = new LRUCache<string, object>({ max: 100, ttl: CACHE_TTL });
+// Separate cache for top market caps with longer TTL
+const topMarketCapsCache = new LRUCache<string, object>({ max: 10, ttl: TOP_MARKET_CAPS_TTL });
 
 // Simple regex for coinId: lowercase letters, numbers, dashes (CoinGecko style)
 const COIN_ID_REGEX = /^[a-z0-9-]+$/;
@@ -36,8 +41,9 @@ function sanitizeCoinId(input: unknown): string | null {
   return COIN_ID_REGEX.test(input) ? input : null;
 }
 
-async function fetchWithCache<T extends object>(url: string): Promise<T> {
-  const cached = apiCache.get(url);
+async function fetchWithCache<T extends object>(url: string, useTopMarketCapsCache = false): Promise<T> {
+  const cache = useTopMarketCapsCache ? topMarketCapsCache : apiCache;
+  const cached = cache.get(url);
   if (cached !== undefined) return cached as T;
   const res = await fetch(url, {
     headers: {
@@ -55,7 +61,7 @@ async function fetchWithCache<T extends object>(url: string): Promise<T> {
     throw new Error(errorMsg);
   }
   const data: T = await res.json();
-  apiCache.set(url, data);
+  cache.set(url, data);
   return data;
 }
 
@@ -96,7 +102,8 @@ export async function getMarketChart(coinId: string, currency: string = 'usd'): 
 export async function getTopMarketCaps(currency: string = 'usd'): Promise<CoinData[]> {
   const priceChangeParam = SUPPORTED_CURRENCIES.includes(currency.toLowerCase()) ? '&price_change_percentage=24h,7d' : '';
   const url = `${BASE_URL}/coins/markets?vs_currency=${currency}&order=market_cap_desc&per_page=5&page=1${priceChangeParam}`;
-  return await fetchWithCache<CoinData[]>(url);
+  // Use the longer TTL cache for top market caps
+  return await fetchWithCache<CoinData[]>(url, true);
 }
 
 export async function handler(req: NextApiRequest, res: NextApiResponse) {
