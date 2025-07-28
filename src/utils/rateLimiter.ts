@@ -16,7 +16,28 @@ const redisUrl = parsedEnv.success ? parsedEnv.data.REDIS_URL : undefined;
 
 let redis: Redis | null = null;
 if (redisUrl) {
-  redis = new Redis(redisUrl);
+  try {
+    redis = new Redis(redisUrl, {
+      retryDelayOnFailover: 100,
+      maxRetriesPerRequest: 3,
+      lazyConnect: true,
+      connectTimeout: 5000,
+      commandTimeout: 5000,
+    });
+    
+    // Handle Redis connection errors gracefully
+    redis.on('error', (error) => {
+      console.warn('Redis connection error, falling back to in-memory cache:', error.message);
+      redis = null;
+    });
+    
+    redis.on('connect', () => {
+      console.log('Redis connected successfully');
+    });
+  } catch (error) {
+    console.warn('Failed to initialize Redis, using in-memory cache:', error);
+    redis = null;
+  }
 }
 
 // In-memory fallback
@@ -33,14 +54,23 @@ export async function rateLimit(req: NextApiRequest): Promise<boolean> {
   const now = Date.now();
 
   if (redis) {
-    const key = `ratelimit:${ip}`;
-    const tx = redis.multi();
-    tx.incr(key);
-    tx.pexpire(key, rateLimitWindowMs);
-    const [count] = await tx.exec().then(results => [Number(results?.[0][1])]);
-    return count <= maxRequestsPerWindow;
-  } else {
-    // In-memory fallback
+    try {
+      const key = `ratelimit:${ip}`;
+      const tx = redis.multi();
+      tx.incr(key);
+      tx.pexpire(key, rateLimitWindowMs);
+      const results = await tx.exec();
+      const [count] = results ? [Number(results[0][1])] : [1];
+      return count <= maxRequestsPerWindow;
+    } catch (error) {
+      console.warn('Redis operation failed, falling back to in-memory cache:', error);
+      redis = null;
+      // Fall through to in-memory cache
+    }
+  }
+  
+  // In-memory fallback (always executed if Redis is null or failed)
+  {
     const entry = rateLimiterCache.get(ip);
     if (!entry) {
       rateLimiterCache.set(ip, { count: 1, timestamp: now });
