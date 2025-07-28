@@ -18,11 +18,11 @@ let redis: Redis | null = null;
 if (redisUrl) {
   try {
     redis = new Redis(redisUrl, {
-      retryDelayOnFailover: 100,
       maxRetriesPerRequest: 3,
       lazyConnect: true,
       connectTimeout: 5000,
       commandTimeout: 5000,
+      enableOfflineQueue: false,
     });
     
     // Handle Redis connection errors gracefully
