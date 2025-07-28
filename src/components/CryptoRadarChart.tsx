@@ -41,6 +41,9 @@ function CryptoRadarChartComponent(): React.ReactElement {
   if (error || localError) return <p className="text-red-600">Error: {error || localError}</p>;
   if (!topCoins.length) return <p>No data to display.</p>;
 
+  // Detect mobile screen size for responsive options
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
   // Prepare data for Radar chart: comparing market_cap, total_volume, price_change_percentage_24h
   const data = {
     labels: [
@@ -65,13 +68,35 @@ function CryptoRadarChartComponent(): React.ReactElement {
     })),
   };
 
-  // Chart options with axis description and custom tooltip for better UX
+  // Chart options with mobile responsiveness and custom tooltip for better UX
   const options: ChartOptions<'radar'> = {
     responsive: true,
+    maintainAspectRatio: !isMobile,
     plugins: {
-      legend: { position: 'top' },
-      title: { display: true, text: 'Comparison of Top Cryptocurrencies' },
+      legend: { 
+        position: 'top',
+        labels: {
+          font: {
+            size: isMobile ? 10 : 12,
+          },
+          padding: isMobile ? 8 : 15,
+          usePointStyle: isMobile, // Use point style on mobile for compact display
+        },
+      },
+      title: { 
+        display: true, 
+        text: isMobile ? 'Top Cryptos Comparison' : 'Comparison of Top Cryptocurrencies',
+        font: {
+          size: isMobile ? 12 : 16,
+        },
+      },
       tooltip: {
+        titleFont: {
+          size: isMobile ? 11 : 14,
+        },
+        bodyFont: {
+          size: isMobile ? 10 : 12,
+        },
         callbacks: {
           label: context => {
             const label = context.dataset.label || '';
@@ -99,10 +124,19 @@ function CryptoRadarChartComponent(): React.ReactElement {
         pointLabels: {
           // Axis labels descriptions for better understanding
           font: {
-            size: 14,
+            size: isMobile ? 10 : 14,
             weight: 'bold',
           },
           color: '#333',
+          // Shorter labels on mobile
+          callback: function(label) {
+            if (isMobile && typeof label === 'string') {
+              if (label.includes('Market Cap')) return 'Market Cap';
+              if (label.includes('Volume')) return 'Volume';
+              if (label.includes('Price Change')) return 'Price Δ%';
+            }
+            return label;
+          },
         },
         ticks: {
           // Show ticks with currency formatting except for Price Change %
@@ -111,6 +145,16 @@ function CryptoRadarChartComponent(): React.ReactElement {
               // For small numbers, show as is (for %)
               if (val < 10) {
                 return val.toString();
+              }
+              // Shorter format for mobile
+              if (isMobile) {
+                if (val >= 1000000000) {
+                  return `${(val / 1000000000).toFixed(1)}B`;
+                } else if (val >= 1000000) {
+                  return `${(val / 1000000).toFixed(1)}M`;
+                } else if (val >= 1000) {
+                  return `${(val / 1000).toFixed(1)}K`;
+                }
               }
               const currencyLabel = getCurrencyLabel(currency);
               if (currency === 'bgn' || currency === 'chf') {
@@ -121,12 +165,20 @@ function CryptoRadarChartComponent(): React.ReactElement {
             return val;
           },
           color: '#666',
+          font: {
+            size: isMobile ? 8 : 10,
+          },
+          maxTicksLimit: isMobile ? 4 : 6,
         },
       },
     },
   };
 
-  return <Radar data={data} options={options} />;
+  return (
+    <div style={{ height: isMobile ? '300px' : '100%', width: '100%' }}>
+      <Radar data={data} options={options} />
+    </div>
+  );
 }
 
 export const CryptoRadarChart = React.memo(CryptoRadarChartComponent);
