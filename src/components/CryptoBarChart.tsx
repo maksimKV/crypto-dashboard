@@ -50,13 +50,37 @@ function CryptoBarChartComponent({ coinId }: CryptoChartProps): React.ReactEleme
   if (error || localError) return <p className="text-red-600">Error: {error || localError}</p>;
   if (!chartData) return <p>No data to display.</p>;
 
-  // Chart options with tooltip customization and axis labels for better UX
+  // Detect mobile screen size for responsive options
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
+  // Chart options with mobile responsiveness and tooltip customization
   const options: ChartOptions<'bar'> = {
     responsive: true,
+    maintainAspectRatio: !isMobile,
     plugins: {
-      legend: { position: 'top' },
-      title: { display: true, text: 'Trading Volume History' },
+      legend: { 
+        position: 'top',
+        labels: {
+          font: {
+            size: isMobile ? 10 : 12,
+          },
+          padding: isMobile ? 10 : 20,
+        },
+      },
+      title: { 
+        display: true, 
+        text: 'Trading Volume History',
+        font: {
+          size: isMobile ? 14 : 16,
+        },
+      },
       tooltip: {
+        titleFont: {
+          size: isMobile ? 12 : 14,
+        },
+        bodyFont: {
+          size: isMobile ? 11 : 13,
+        },
         callbacks: {
           // Custom label to format volume with currency sign and thousands separator
           label: context => {
@@ -73,30 +97,65 @@ function CryptoBarChartComponent({ coinId }: CryptoChartProps): React.ReactEleme
     scales: {
       x: {
         title: {
-          display: true,
+          display: !isMobile, // Hide x-axis title on mobile to save space
           text: 'Date',
+          font: {
+            size: isMobile ? 10 : 12,
+          },
+        },
+        ticks: {
+          font: {
+            size: isMobile ? 8 : 10,
+          },
+          maxRotation: isMobile ? 45 : 0,
+          minRotation: isMobile ? 45 : 0,
+          maxTicksLimit: isMobile ? 6 : 10,
         },
       },
       y: {
         title: {
-          display: true,
+          display: !isMobile, // Hide y-axis title on mobile to save space
           text: `Volume (${getCurrencyLabel(currency)})`,
+          font: {
+            size: isMobile ? 10 : 12,
+          },
         },
         ticks: {
+          font: {
+            size: isMobile ? 8 : 10,
+          },
           // Format Y-axis ticks with currency sign and thousands separator
           callback: val => {
+            const value = Number(val);
             const label = getCurrencyLabel(currency);
-            if (currency === 'bgn' || currency === 'chf') {
-              return `${Number(val).toLocaleString()} ${label}`;
+            
+            // Shorter format for mobile
+            if (isMobile) {
+              if (value >= 1000000000) {
+                return `${(value / 1000000000).toFixed(1)}B`;
+              } else if (value >= 1000000) {
+                return `${(value / 1000000).toFixed(1)}M`;
+              } else if (value >= 1000) {
+                return `${(value / 1000).toFixed(1)}K`;
+              }
             }
-            return `${label}${Number(val).toLocaleString()}`;
+            
+            if (currency === 'bgn' || currency === 'chf') {
+              return `${value.toLocaleString()} ${label}`;
+            }
+            return `${label}${value.toLocaleString()}`;
           },
+          maxTicksLimit: isMobile ? 5 : 8,
         },
       },
     },
   };
 
-  return <Bar data={chartData} options={options} />;
+  return (
+    <div style={{ height: isMobile ? '256px' : '100%', width: '100%' }}>
+      <Bar data={chartData} options={options} />
+    </div>
+  );
 }
 
 export const CryptoBarChart = React.memo(CryptoBarChartComponent);
