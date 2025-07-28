@@ -51,13 +51,37 @@ function CryptoLineChartComponent({ coinId }: CryptoChartProps): React.ReactElem
   if (error || localError) return <p className="text-red-600">Error: {error || localError}</p>;
   if (!chartData) return <p>No data to display.</p>;
 
-  // Chart options with tooltip customization and axis labels for better UX
+  // Detect mobile screen size for responsive options
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+
+  // Chart options with mobile-responsive configuration
   const options: ChartOptions<'line'> = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
-      legend: { position: 'top' },
-      title: { display: true, text: `Historical Prices` },
+      legend: { 
+        position: 'top',
+        labels: {
+          font: {
+            size: isMobile ? 10 : 12,
+          },
+          padding: isMobile ? 10 : 20,
+        },
+      },
+      title: { 
+        display: true, 
+        text: `Historical Prices`,
+        font: {
+          size: isMobile ? 14 : 16,
+        },
+      },
       tooltip: {
+        titleFont: {
+          size: isMobile ? 12 : 14,
+        },
+        bodyFont: {
+          size: isMobile ? 11 : 13,
+        },
         callbacks: {
           // Custom label to format price with 2 decimal places and currency sign
           label: context => {
@@ -74,30 +98,70 @@ function CryptoLineChartComponent({ coinId }: CryptoChartProps): React.ReactElem
     scales: {
       x: {
         title: {
-          display: true,
+          display: !isMobile, // Hide x-axis title on mobile to save space
           text: 'Date',
+          font: {
+            size: isMobile ? 10 : 12,
+          },
+        },
+        ticks: {
+          font: {
+            size: isMobile ? 8 : 10,
+          },
+          maxRotation: isMobile ? 45 : 0,
+          minRotation: isMobile ? 45 : 0,
+          maxTicksLimit: isMobile ? 6 : 10,
         },
       },
       y: {
         title: {
-          display: true,
+          display: !isMobile, // Hide y-axis title on mobile to save space
           text: `Price (${getCurrencyLabel(currency)})`,
+          font: {
+            size: isMobile ? 10 : 12,
+          },
         },
         ticks: {
+          font: {
+            size: isMobile ? 8 : 10,
+          },
+          maxTicksLimit: isMobile ? 6 : 8,
           // Format Y-axis ticks with currency sign and thousands separator
           callback: val => {
             const label = getCurrencyLabel(currency);
-            if (currency === 'bgn' || currency === 'chf') {
-              return `${Number(val).toLocaleString()} ${label}`;
+            const value = Number(val);
+            // Shorter format for mobile
+            if (isMobile) {
+              if (value >= 1000000) {
+                return `${(value / 1000000).toFixed(1)}M`;
+              } else if (value >= 1000) {
+                return `${(value / 1000).toFixed(1)}K`;
+              }
             }
-            return `${label}${Number(val).toLocaleString()}`;
+            if (currency === 'bgn' || currency === 'chf') {
+              return `${value.toLocaleString()} ${label}`;
+            }
+            return `${label}${value.toLocaleString()}`;
           },
         },
       },
     },
+    elements: {
+      point: {
+        radius: isMobile ? 2 : 3,
+        hoverRadius: isMobile ? 4 : 6,
+      },
+      line: {
+        borderWidth: isMobile ? 1.5 : 2,
+      },
+    },
   };
 
-  return <Line data={chartData} options={options} />;
+  return (
+    <div className={`relative ${isMobile ? 'h-64' : 'h-96'}`}>
+      <Line data={chartData} options={options} />
+    </div>
+  );
 }
 
 export const CryptoLineChart = React.memo(CryptoLineChartComponent);
